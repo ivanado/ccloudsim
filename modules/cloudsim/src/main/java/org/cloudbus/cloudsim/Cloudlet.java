@@ -463,6 +463,18 @@ public class Cloudlet {
         setUtilizationModelBw(utilizationModelBw);
     }
 
+    public double getExecStartTime() {
+        return execStartTime;
+    }
+
+    public int getVmId() {
+        return vmId;
+    }
+
+    public int getCloudletId() {
+        return cloudletId;
+    }
+
     // ////////////////////// INTERNAL CLASS ///////////////////////////////////
 
     /**
@@ -1384,6 +1396,26 @@ public class Cloudlet {
 
         return result;
     }
+
+    // Data cloudlet
+    /**
+     * Gets the required files.
+     *
+     * @return the required files
+     */
+    public List<String> getRequiredFiles() {
+        return requiredFiles;
+    }
+
+    /**
+     * Sets the required files.
+     *
+     * @param requiredFiles the new required files
+     */
+    protected void setRequiredFiles(final List<String> requiredFiles) {
+        this.requiredFiles = requiredFiles;
+    }
+
 
     /**
      * Deletes the given filename from the list.
