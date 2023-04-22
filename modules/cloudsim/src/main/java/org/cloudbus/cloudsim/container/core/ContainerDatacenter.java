@@ -230,8 +230,8 @@ public class ContainerDatacenter extends SimEntity {
                 updateCloudletProcessing();
                 checkCloudletCompletion();
             }
-            case containerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev, true);
-            case containerCloudSimTags.CONTAINER_MIGRATE -> processContainerMigrate(ev, false);
+            case ContainerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev, true);
+            case ContainerCloudSimTags.CONTAINER_MIGRATE -> processContainerMigrate(ev, false);
 
             // other unknown tags are processed by this method
             default -> processOtherEvent(ev);
@@ -270,7 +270,7 @@ public class ContainerDatacenter extends SimEntity {
                     Log.printLine(String.format("Couldn't find a vm to host the container #%s", container.getUid()));
 
                 }
-                send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), containerCloudSimTags.CONTAINER_CREATE_ACK, data);
+                send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), ContainerCloudSimTags.CONTAINER_CREATE_ACK, data);
 
             }
         }
@@ -598,7 +598,7 @@ public class ContainerDatacenter extends SimEntity {
             } else {
                 data[2] = CloudSimTags.FALSE;
             }
-            sendNow(ev.getSource(), containerCloudSimTags.CONTAINER_CREATE_ACK, data);
+            sendNow(ev.getSource(), ContainerCloudSimTags.CONTAINER_CREATE_ACK, data);
         }
 
         Log.formatLine(
