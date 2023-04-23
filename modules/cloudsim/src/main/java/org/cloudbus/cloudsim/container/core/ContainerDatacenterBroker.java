@@ -127,7 +127,7 @@ public class ContainerDatacenterBroker extends SimEntity {
      * @pre name != null
      * @post $none
      */
-    public ContainerDatacenterBroker(String name, double overBookingfactor) throws Exception {
+    public ContainerDatacenterBroker(String name, double overBookingfactor) {
         super(name);
 
         setVmList(new ArrayList<>());
