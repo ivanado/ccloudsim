@@ -967,4 +967,8 @@ public class CloudSim {
 		return paused;
 	}
 
+	public static boolean isFutureEventQueued(final java.util.function.Predicate<SimEvent> predicate){
+		return future.stream().anyMatch(predicate);
+	}
+
 }

@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 /**
  * This class implements the future event queue used by {@link CloudSim}. 
@@ -98,6 +99,10 @@ public class FutureQueue {
 	 */
 	public void clear() {
 		sortedSet.clear();
+	}
+
+	public Stream<SimEvent> stream(){
+		return sortedSet.stream();
 	}
 
 }
