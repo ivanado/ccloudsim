@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.examples.container.fault.inejctor;
+package org.cloudbus.cloudsim.examples.container.fault.injector;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Log;
@@ -32,22 +32,33 @@ import org.cloudbus.cloudsim.container.utils.IDs;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.examples.container.ConstantsExamples;
 import org.cloudbus.cloudsim.examples.container.UtilizationModelPlanetLabInMemoryExtended;
+import org.cloudbus.cloudsim.fault.injector.ContainerFaultInjector;
 import org.cloudbus.cloudsim.fault.injector.HostFaultInjector;
+import org.cloudbus.cloudsim.vmplus.util.CustomLog;
 
 import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 public class HostFaultInjectionExample {
 
     public static void main(String[] args) {
-        Log.printLine("Starting ContainerCloudHostFailureInjectionExample...");
+        CustomLog.printLine("Starting ContainerCloudHostFailureInjectionExample...");
 
         try {
-
+            Properties props = new Properties();
+            try (InputStream is = Files.newInputStream(Paths.get("custom_log.properties"))) {
+                props.load(is);
+            }
+//            CustomLog.configLogger(props);
+//            CustomLog.redirectToConsole();
             int num_user = 1;
 
             Calendar calendar = Calendar.getInstance();
@@ -80,7 +91,7 @@ public class HostFaultInjectionExample {
                     ConstantsExamples.SCHEDULING_INTERVAL, logAddress,
                     ConstantsExamples.VM_STARTTUP_DELAY, ConstantsExamples.CONTAINER_STARTTUP_DELAY);
             HostFaultInjector hfi = new HostFaultInjector(datacenter);
-
+            ContainerFaultInjector cfi =new ContainerFaultInjector(datacenter);
             broker.submitCloudletList(cloudletList.subList(0, containerList.size()));
             broker.submitContainerList(containerList);
             broker.submitVmList(vmList);

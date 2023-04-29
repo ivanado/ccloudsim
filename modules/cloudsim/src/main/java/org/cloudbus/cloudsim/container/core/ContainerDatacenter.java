@@ -11,6 +11,7 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -232,10 +233,18 @@ public class ContainerDatacenter extends SimEntity {
             }
             case ContainerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev, true);
             case ContainerCloudSimTags.CONTAINER_MIGRATE -> processContainerMigrate(ev, false);
+            case FaultInjectionCloudSimTags.CONTAINER_FAIL -> processContainerFail(ev, false);
 
             // other unknown tags are processed by this method
             default -> processOtherEvent(ev);
         }
+    }
+
+    private void processContainerFail(SimEvent ev, boolean ack) {
+        Container container = (Container) ev.getData();
+        getContainerAllocationPolicy().deallocateVmForContainer(container);
+
+        getContainerList().remove(container);
     }
 
     public void processContainerSubmit(SimEvent ev, boolean ack) {

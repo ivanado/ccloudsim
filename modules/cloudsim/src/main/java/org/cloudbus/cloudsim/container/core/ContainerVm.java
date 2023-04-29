@@ -859,7 +859,7 @@ public class ContainerVm {
             containerDeallocate(container);
 //            Log.printConcatLine("The Container To remove is :   ", container.getId(), "Size before removing is ", getContainerList().size(), "  vm ID is: ", getId());
             getContainerList().remove(container);
-            Log.printLine("ContainerVm# "+getId()+" containerDestroy:......" + container.getId() + "Is deleted from the list");
+            Log.printConcatLine(CloudSim.clock(), ": ", getClass().getSimpleName(),": vm#", getId()," containerDestroy:......" , container.getId() , " is deleted from the list");
 
 //            Log.printConcatLine("Size after removing", getContainerList().size());
             while(getContainerList().contains(container)){
