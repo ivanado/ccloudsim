@@ -1,6 +1,7 @@
 package org.cloudbus.cloudsim.vmplus.util;
 
 import org.cloudbus.cloudsim.*;
+import org.cloudbus.cloudsim.container.core.ContainerHost;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -23,6 +24,7 @@ public final class Id {
 
     static {
         COUNTERS.put(Cloudlet.class, 1);
+        COUNTERS.put(ContainerHost.class, 1);
         COUNTERS.put(Vm.class, 1);
         COUNTERS.put(Host.class, 1);
         COUNTERS.put(DatacenterBroker.class, 1);

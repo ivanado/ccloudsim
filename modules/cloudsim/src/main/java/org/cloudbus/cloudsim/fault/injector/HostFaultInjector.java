@@ -6,13 +6,11 @@ import lombok.Setter;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
-import org.cloudbus.cloudsim.container.containerVmProvisioners.ContainerVmPe;
+import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.core.Container;
-import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.container.core.ContainerVm;
+import org.cloudbus.cloudsim.container.core.bm.BMContainerDatacenter;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
@@ -31,13 +29,13 @@ public class HostFaultInjector extends SimEntity {
 
 
     @Getter
-    private ContainerDatacenter datacenter;
+    private BMContainerDatacenter datacenter;
 
     @Getter
     @Setter
     private int totalHostFaults = 0;
 
-    protected final void setDatacenter(@NonNull final ContainerDatacenter datacenter) {
+    protected final void setDatacenter(@NonNull final BMContainerDatacenter datacenter) {
         this.datacenter = datacenter;
     }
 
@@ -51,7 +49,7 @@ public class HostFaultInjector extends SimEntity {
     @Getter
     private double maxTimeToFail = Double.MAX_VALUE;
 
-    public HostFaultInjector(final ContainerDatacenter datacenter) {
+    public HostFaultInjector(final BMContainerDatacenter datacenter) {
         super(datacenter.getName() + "-HostFaultInjector");
         this.setDatacenter(datacenter);
         this.lastFailedHost = null;
@@ -91,7 +89,7 @@ public class HostFaultInjector extends SimEntity {
         if (failedHosts.size() > 0) {
             ContainerHost host = failedHosts.remove(0);
             Log.printConcatLine(getClass().getSimpleName(), ": Recovering host ", host.getId());
-            host.getPeList().stream().map(ContainerVmPe::getId).forEach(id ->
+            host.getPeList().stream().map(ContainerPe::getId).forEach(id ->
                     host.setPeStatus(id, Pe.FREE)
             );
         }
@@ -101,7 +99,7 @@ public class HostFaultInjector extends SimEntity {
 
     private void generateHostFaultAndScheduleNext() {
         try {
-            final ContainerHost host = getRandomHostContainingVMs();
+            final ContainerHost host = getRandomHost();
             injectHostFault(host);
             scheduleHostRecovery(host);
         } finally {
@@ -127,19 +125,6 @@ public class HostFaultInjector extends SimEntity {
         return datacenter.getHostList().get(idx);
     }
 
-    private ContainerHost getRandomHostContainingVMs() {
-        if (datacenter.getHostList().isEmpty()) {
-            return null;
-        }
-
-        List<ContainerHost> hostsWithVM = datacenter.getHostList().stream().filter(host -> host.getVmList().size() > 0).toList();
-        if (hostsWithVM.isEmpty()) {
-            return null;
-        }
-
-        final int idx = (int) (Math.random() * hostsWithVM.size());
-        return hostsWithVM.get(idx);
-    }
 
     private void injectHostFault(ContainerHost host) {
         if (host == null) {
@@ -151,60 +136,46 @@ public class HostFaultInjector extends SimEntity {
         totalHostFaults++;
         hostFailureTimes.computeIfAbsent(lastFailedHost, h -> new ArrayList<>()).add(CloudSim.clock());
 
-        this.lastFailedHost.getPeList().stream().map(ContainerVmPe::getId).forEach(id ->
+        this.lastFailedHost.getPeList().stream().map(ContainerPe::getId).forEach(id ->
                 this.lastFailedHost.setPeStatus(id, Pe.FAILED)
         );
 
         failHost();
     }
 
-    private String formatVmsToHosts() {
-        return String.join(",", lastFailedHost.getVmList().stream().map(vm -> "vm#" + vm.getId() + "=[" + getVmContainerIdsAsString(vm) + "]").toList());
-    }
 
-    private String getVmContainerIdsAsString(ContainerVm vm) {
-        return String.join(",", vm.getContainerList().stream().map(container -> String.valueOf(container.getId())).toList());
-    }
 
     private void failHost() {
 
-        final List<String> vmIds = lastFailedHost.getVmList().stream().map(vm -> String.valueOf(vm.getId())).toList();
+        final List<String> containerIds = lastFailedHost.getContainerList().stream().map(c -> String.valueOf(c.getId())).toList();
 
-        final String msg = vmIds.size() > 0
-                ? "affecting all its %d vms [%s] containers".formatted(vmIds.size(), formatVmsToHosts())
-                : "but there was no running VM";
+        final String msg = containerIds.size() > 0
+                ? "affecting all its %d containers [%s]".formatted(containerIds.size(), String.join(",", containerIds))
+                : "but there was no running containers";
         Log.printConcatLine(Level.SEVERE,
                 String.format(" %s: All %d PEs from host #%s failed at %f, %s.",
                         getClass().getSimpleName(),
                         lastFailedHost.getNumberOfPes(), lastFailedHost.getId(),
                         CloudSim.clock(), msg), null);
         failHostContainers();
-        failHostVms();
         failedHosts.add(lastFailedHost);
     }
 
 
     private void failHostContainers() {
-        List<Container> hostContainers = lastFailedHost.getVmList().stream().map(ContainerVm::getContainerList).flatMap(Collection::stream).toList();
+        List<Container> hostContainers = lastFailedHost.getContainerList();
         hostContainers.forEach(container -> failHostContainer(container));
     }
 
     private void failHostContainer(Container container) {
         Log.printConcatLine(getClass().getSimpleName(),
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
-                " with uid=", container.getUid(), " from vm #", container.getVm().getId(), " to datacenter ", this.datacenter.getName());
+                " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
 
-        sendNow(datacenter.getId(), FaultInjectionCloudSimTags.CONTAINER_DESTROY, container);
+        sendNow(datacenter.getId(), FaultInjectionCloudSimTags.CONTAINER_DESTROY, container.getId());
     }
 
-    private void failHostVms() {
-        lastFailedHost.getVmList().forEach(vm -> {
-            Log.printConcatLine(getClass().getSimpleName(),
-                    ": Sending VM_DESTROY for vm #", vm.getId(),
-                    " with uid=", vm.getUid(), " to datacenter ", this.datacenter.getName());
-            sendNow(datacenter.getId(), CloudSimTags.VM_DESTROY, vm);
-        });
-    }
+
 
     @Override
     public void shutdownEntity() {

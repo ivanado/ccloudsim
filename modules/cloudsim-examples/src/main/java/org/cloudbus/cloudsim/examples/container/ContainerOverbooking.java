@@ -18,10 +18,6 @@ public class ContainerOverbooking {
      * @throws IOException Signals that an I/O exception has occurred.
      */
     public static void main(String[] args) throws IOException {
-        /**
-         * The experiments can be repeated for (repeat - runtime +1) times.
-         * Please set these values as the arguments of the main function or set them bellow:
-         */
         int runTime = Integer.parseInt(args[0]);
         int repeat = Integer.parseInt(args[1]);
         for (int i = 10; i < repeat; i += 10) {
@@ -63,17 +59,17 @@ public class ContainerOverbooking {
              */
             String vmSelectionPolicy = "VmMaxC";
 
-            new RunnerInitiator(
-                    enableOutput,
-                    outputToFile,
-                    inputFolder,
-                    outputFolder,
-                    vmAllocationPolicy,
-                    containerAllocationPolicy,
-                    vmSelectionPolicy,
-                    containerSelectionPolicy,
-                    hostSelectionPolicy,
-                    i, Integer.toString(runTime), outputFolder);
+//            new RunnerInitiator(
+//                    enableOutput,
+//                    outputToFile,
+//                    inputFolder,
+//                    outputFolder,
+//                    vmAllocationPolicy,
+//                    containerAllocationPolicy,
+//                    vmSelectionPolicy,
+//                    containerSelectionPolicy,
+//                    hostSelectionPolicy,
+//                    i, Integer.toString(runTime), outputFolder);
         }
 
     }

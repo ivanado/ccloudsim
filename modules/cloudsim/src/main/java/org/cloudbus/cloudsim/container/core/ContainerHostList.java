@@ -1,10 +1,8 @@
 package org.cloudbus.cloudsim.container.core;
 
 
-import org.cloudbus.cloudsim.container.lists.ContainerVmPeList;
+import org.cloudbus.cloudsim.container.lists.ContainerPeList;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -61,7 +59,7 @@ public class ContainerHostList {
     public static <T extends ContainerHost> int getNumberOfFreePes(List<T> hostList) {
         int numberOfFreePes = 0;
         for (T host : hostList) {
-            numberOfFreePes += ContainerVmPeList.getNumberOfFreePes(host.getPeList());
+            numberOfFreePes += ContainerPeList.getNumberOfFreePes(host.getPeList());
         }
         return numberOfFreePes;
     }
@@ -78,7 +76,7 @@ public class ContainerHostList {
     public static <T extends ContainerHost> int getNumberOfBusyPes(List<T> hostList) {
         int numberOfBusyPes = 0;
         for (T host : hostList) {
-            numberOfBusyPes += ContainerVmPeList.getNumberOfBusyPes(host.getPeList());
+            numberOfBusyPes += ContainerPeList.getNumberOfBusyPes(host.getPeList());
         }
         return numberOfBusyPes;
     }
@@ -108,7 +106,7 @@ public class ContainerHostList {
      */
     public static <T extends ContainerHost> T getHostWithFreePe(List<T> hostList, int pesNumber) {
         for (T host : hostList) {
-            if (ContainerVmPeList.getNumberOfFreePes(host.getPeList()) >= pesNumber) {
+            if (ContainerPeList.getNumberOfFreePes(host.getPeList()) >= pesNumber) {
                 return host;
             }
         }
@@ -135,30 +133,38 @@ public class ContainerHostList {
             return false;
         }
         return host.setPeStatus(peId, status);
+//    }
+//
+//    /**
+//     * Sort by cpu utilization.
+//     *
+//     * @param hostList the vm list
+//     */
+//    public static <T extends ContainerHost> void sortByCpuUtilization(List<T> hostList) {
+//        hostList.sort((a, b) -> {
+//            Double aUtilization = ((PowerContainerHost) a).getUtilizationOfCpu();
+//            Double bUtilization = ((PowerContainerHost) b).getUtilizationOfCpu();
+//            return bUtilization.compareTo(aUtilization);
+//        });
+//    }
+//
+//    public static <T extends ContainerHost> void sortByCpuUtilizationDescending(List<T> hostList) {
+//
+//        hostList.sort(Collections.reverseOrder((a, b) -> {
+//            Double aUtilization = ((PowerContainerHost) a).getUtilizationOfCpu();
+//            Double bUtilization = ((PowerContainerHost) b).getUtilizationOfCpu();
+//            return bUtilization.compareTo(aUtilization);
+//        }));
+
+
     }
-
-    /**
-     * Sort by cpu utilization.
-     *
-     * @param hostList the vm list
-     */
-    public static <T extends ContainerHost> void sortByCpuUtilization(List<T> hostList) {
-        hostList.sort((a, b) -> {
-            Double aUtilization = ((PowerContainerHost) a).getUtilizationOfCpu();
-            Double bUtilization = ((PowerContainerHost) b).getUtilizationOfCpu();
-            return bUtilization.compareTo(aUtilization);
-        });
-    }
-
-    public static <T extends ContainerHost> void sortByCpuUtilizationDescending(List<T> hostList) {
-
-        hostList.sort(Collections.reverseOrder((a, b) -> {
-            Double aUtilization = ((PowerContainerHost) a).getUtilizationOfCpu();
-            Double bUtilization = ((PowerContainerHost) b).getUtilizationOfCpu();
-            return bUtilization.compareTo(aUtilization);
-        }));
-
-
+    public static <T extends ContainerHost> T getContainer(List<T> hostList, int pesNumber) {
+        for (T host : hostList) {
+            if (ContainerPeList.getNumberOfFreePes(host.getPeList()) >= pesNumber) {
+                return host;
+            }
+        }
+        return null;
     }
 
 }

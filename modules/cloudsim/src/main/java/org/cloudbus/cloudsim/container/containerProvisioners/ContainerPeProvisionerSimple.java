@@ -13,15 +13,13 @@ import org.cloudbus.cloudsim.container.core.Container;
 /**
  * @author Sareh Fotuhi Piraghaj
  */
-public class CotainerPeProvisionerSimple extends ContainerPeProvisioner {
+public class ContainerPeProvisionerSimple extends ContainerPeProvisioner {
 
     /**
      * The pe table.
      */
     private Map<String, List<Double>> peTable;
-    /**
-     * @param mips
-     */
+
     /**
      * Creates the PeProvisionerSimple object.
      *
@@ -29,7 +27,7 @@ public class CotainerPeProvisionerSimple extends ContainerPeProvisioner {
      * @pre $none
      * @post $none
      */
-    public CotainerPeProvisionerSimple(double availableMips) {
+    public ContainerPeProvisionerSimple(double availableMips) {
         super(availableMips);
         setPeTable(new HashMap<String, ArrayList<Double>>());
     }

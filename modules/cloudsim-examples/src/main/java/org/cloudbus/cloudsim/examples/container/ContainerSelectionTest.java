@@ -67,17 +67,17 @@ public class ContainerSelectionTest {
 
             int OverBookingFactor = 80;
 
-            new RunnerInitiator(
-                    enableOutput,
-                    outputToFile,
-                    inputFolder,
-                    outputFolder,
-                    vmAllocationPolicy,
-                    containerAllocationPolicy,
-                    vmSelectionPolicy,
-                    containerSelectionPolicy,
-                    hostSelectionPolicy,
-                    OverBookingFactor, Integer.toString(i), outputFolder);
+//            new RunnerInitiator(
+//                    enableOutput,
+//                    outputToFile,
+//                    inputFolder,
+//                    outputFolder,
+//                    vmAllocationPolicy,
+//                    containerAllocationPolicy,
+//                    vmSelectionPolicy,
+//                    containerSelectionPolicy,
+//                    hostSelectionPolicy,
+//                    OverBookingFactor, Integer.toString(i), outputFolder);
         }
 
     }

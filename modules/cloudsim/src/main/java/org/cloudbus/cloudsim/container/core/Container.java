@@ -1,7 +1,6 @@
 package org.cloudbus.cloudsim.container.core;
 
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.cloudbus.cloudsim.container.schedulers.ContainerCloudletScheduler;
@@ -86,12 +85,6 @@ public class Container {
     @Getter
     private ContainerCloudletScheduler containerCloudletScheduler;
 
-    /**
-     * The ContainerVm.
-     */
-    @Getter
-    @Setter
-    private ContainerVm vm;
 
     /**
      * In migration flag.
@@ -165,6 +158,9 @@ public class Container {
     @Getter
     private double schedulingInterval;
 
+    @Getter
+    @Setter
+    private ContainerHost host;
 
     /**
      * Creates a new Container object.

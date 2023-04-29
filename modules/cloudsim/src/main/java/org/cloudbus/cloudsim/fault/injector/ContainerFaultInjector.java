@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.cloudbus.cloudsim.container.core.Container;
-import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
+import org.cloudbus.cloudsim.container.core.bm.BMContainerDatacenter;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
@@ -25,8 +25,8 @@ public class ContainerFaultInjector extends SimEntity {
     private double maxTimeToFail =Double.MAX_VALUE;
 
     @Getter @Setter
-    private ContainerDatacenter datacenter;
-    public ContainerFaultInjector(final ContainerDatacenter datacenter) {
+    private BMContainerDatacenter datacenter;
+    public ContainerFaultInjector(final BMContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerFaultInjector");
         this.setDatacenter(datacenter);
         this.containerFailureTimes = new HashMap<>();
@@ -66,9 +66,9 @@ public class ContainerFaultInjector extends SimEntity {
         containerFailureTimes.computeIfAbsent(container.getUid(),  h -> new ArrayList<>()).add(CloudSim.clock());
         CustomLog.printConcatLine(getClass().getSimpleName(),
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
-                " with uid=", container.getUid(), " from vm #", container.getVm().getId(), " to datacenter ", this.datacenter.getName());
+                " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
 
-        sendNow(datacenter.getId(), FaultInjectionCloudSimTags.CONTAINER_DESTROY, container);
+        sendNow(datacenter.getId(), FaultInjectionCloudSimTags.CONTAINER_DESTROY, container.getId());
     }
 
     private Container getRandomContainer() {
