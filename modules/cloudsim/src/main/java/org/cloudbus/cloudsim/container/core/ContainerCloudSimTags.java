@@ -38,7 +38,17 @@ public class ContainerCloudSimTags {
      */
     public static final int VM_NEW_CREATE = ContainerSimBASE + 11;
 
+    private static final int CONTAINERS_ON_HOSTS_BASE = ContainerSimBASE + 1000;
 
+    public static final int SCHEDULE_USER_REQUEST_TASKS = CONTAINERS_ON_HOSTS_BASE + 2;
+
+    public static final int SUBMIT_TASK = CONTAINERS_ON_HOSTS_BASE + 3;
+
+    public static final int TASK_COMPLETE = CONTAINERS_ON_HOSTS_BASE + 4;
+
+    public static final int HOST_DATACENTER_EVENT = CONTAINERS_ON_HOSTS_BASE + 5;
+
+    public static final int DATACENTER_PRINT = CONTAINERS_ON_HOSTS_BASE + 6;
     private ContainerCloudSimTags() {
         // TODO Auto-generated constructor stub
         /** Private Constructor */

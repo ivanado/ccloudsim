@@ -4,8 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.core.bm.BMCloudSimTags;
-import org.cloudbus.cloudsim.container.core.bm.BMTaskScheduler;
+import org.cloudbus.cloudsim.container.schedulers.UserRequestTasksScheduler;
 import org.cloudbus.cloudsim.container.schedulers.ContainerCloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
@@ -43,7 +42,7 @@ public class ContainerDatacenterBroker extends SimEntity {
     private Map<Integer, Cloudlet> processedCloudlets;
 
 
-    private BMTaskScheduler taskScheduler;
+    private UserRequestTasksScheduler taskScheduler;
 
     public ContainerDatacenterBroker(String name) {
         super(name);
@@ -53,7 +52,7 @@ public class ContainerDatacenterBroker extends SimEntity {
         scheduledCloudlets = new HashMap<>();
         createdContainers = new ArrayList<>();
         runningContainers = new ArrayList<>();
-        taskScheduler = new BMTaskScheduler("BM-TaskScheduler", getId());
+        taskScheduler = new UserRequestTasksScheduler("BM-TaskScheduler", getId());
     }
 
     @Override
@@ -70,7 +69,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
             // Resource characteristics answer
             case CloudSimTags.RESOURCE_CHARACTERISTICS -> processResourceCharacteristics(ev);
-            case BMCloudSimTags.SUBMIT_TASK -> processTaskSubmit(ev);
+            case ContainerCloudSimTags.SUBMIT_TASK -> processTaskSubmit(ev);
 
             // A finished cloudlet returned
             case CloudSimTags.CLOUDLET_RETURN -> processCloudletReturn(ev);
@@ -139,7 +138,7 @@ public class ContainerDatacenterBroker extends SimEntity {
                         ", is created on host #", hostId);
                 totalContainersCreated++;
 
-                sendNow(datacenterIdsList.get(0), BMCloudSimTags.DATACENTER_PRINT);
+                sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.DATACENTER_PRINT);
 
 //                ---->process the cloudlet on created container
                 Cloudlet cloudletToProcess = createdContainerToCloudletMap.get(containerId);
@@ -161,7 +160,7 @@ public class ContainerDatacenterBroker extends SimEntity {
                 " returned. ", totalProcessedCloudlets, " finished Cloudlets = ", String.join(", ", processedCloudlets.keySet().stream().map(c -> c.toString()).collect(Collectors.toList())));
         //deallocate the container used for cloudlet processing
         sendNow(datacenterIdsList.get(0), FaultInjectionCloudSimTags.CONTAINER_DESTROY, cloudlet.getContainerId());
-        sendNow(taskScheduler.getId(), BMCloudSimTags.TASK_COMPLETE, cloudlet);
+        sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_COMPLETE, cloudlet);
 
 
         if (this.taskScheduler.allTasksProcessed()) {

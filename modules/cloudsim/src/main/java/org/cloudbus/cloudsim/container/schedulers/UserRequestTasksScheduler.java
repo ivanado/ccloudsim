@@ -1,8 +1,9 @@
-package org.cloudbus.cloudsim.container.core.bm;
+package org.cloudbus.cloudsim.container.schedulers;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.UtilizationModelFull;
+import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.MicroserviceCloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -19,10 +20,8 @@ import java.util.Queue;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.cloudbus.cloudsim.container.core.bm.BMCloudSimTags.SCHEDULE_USER_REQUEST_TASKS;
-import static org.cloudbus.cloudsim.container.core.bm.BMCloudSimTags.TASK_COMPLETE;
 
-public class BMTaskScheduler extends SimEntity {
+public class UserRequestTasksScheduler extends SimEntity {
 
     public static final int MAX_USER_REQUESTS = 3;
     private int brokerId;
@@ -31,7 +30,7 @@ public class BMTaskScheduler extends SimEntity {
     List<MicroserviceCloudlet> allTasks;
     Map<MicroserviceCloudlet, MicroserviceCloudlet> waitingList;
 
-    public BMTaskScheduler(String name, int brokerId) {
+    public UserRequestTasksScheduler(String name, int brokerId) {
         super(name);
         this.brokerId = brokerId;
         tasksQueue = new LinkedList<>();
@@ -52,9 +51,9 @@ public class BMTaskScheduler extends SimEntity {
     }
 
     private void scheduleNextUserRequest() {
-        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != SCHEDULE_USER_REQUEST_TASKS;
+        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS;
         if (CloudSim.isFutureEventQueued(otherEventsPredicate)) {
-            schedule(getId(), getNextUserRequestDelay(), SCHEDULE_USER_REQUEST_TASKS);
+            schedule(getId(), getNextUserRequestDelay(), ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS);
         }
 
     }
@@ -66,10 +65,9 @@ public class BMTaskScheduler extends SimEntity {
     @Override
     public void processEvent(SimEvent ev) {
 
-        if (ev.getTag() == SCHEDULE_USER_REQUEST_TASKS) {
+        if (ev.getTag() == ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS) {
             enqueueUserRequestTasksAndScheduleNext();
-        } else if (ev.getTag() == TASK_COMPLETE) {
-
+        } else if (ev.getTag() == ContainerCloudSimTags.TASK_COMPLETE) {
             processTaskComplete(ev);
         }
     }
@@ -90,12 +88,12 @@ public class BMTaskScheduler extends SimEntity {
         if (!tasksQueue.isEmpty()) {
             MicroserviceCloudlet cloudlet = tasksQueue.poll();
             if (cloudlet.getProducerMs() == null) {
-                sendNow(brokerId, BMCloudSimTags.SUBMIT_TASK, cloudlet);
+                sendNow(brokerId, ContainerCloudSimTags.SUBMIT_TASK, cloudlet);
 
             } else {
                 List<Integer> finishedCloudletIds = finishedTasks.stream().map(c -> c.getCloudletId()).collect(Collectors.toList());
                 if (finishedCloudletIds.contains(cloudlet.getProducerMs().getCloudletId())) {
-                    sendNow(brokerId, BMCloudSimTags.SUBMIT_TASK, cloudlet);
+                    sendNow(brokerId, ContainerCloudSimTags.SUBMIT_TASK, cloudlet);
                 } else {
                     tasksQueue.add(cloudlet);
                 }
@@ -133,7 +131,7 @@ public class BMTaskScheduler extends SimEntity {
     }
 
     boolean isScheduleTasksEventQueued() {
-        final Predicate<SimEvent> scheduleTasksEventsPredicate = evt -> evt.getTag() == SCHEDULE_USER_REQUEST_TASKS;
+        final Predicate<SimEvent> scheduleTasksEventsPredicate = evt -> evt.getTag() == ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS;
         return CloudSim.isFutureEventQueued(scheduleTasksEventsPredicate);
     }
 
