@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.cloudbus.cloudsim.container.core.Container;
-import org.cloudbus.cloudsim.container.core.bm.BMContainerDatacenter;
+import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
@@ -25,8 +25,8 @@ public class ContainerFaultInjector extends SimEntity {
     private double maxTimeToFail =Double.MAX_VALUE;
 
     @Getter @Setter
-    private BMContainerDatacenter datacenter;
-    public ContainerFaultInjector(final BMContainerDatacenter datacenter) {
+    private ContainerDatacenter datacenter;
+    public ContainerFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerFaultInjector");
         this.setDatacenter(datacenter);
         this.containerFailureTimes = new HashMap<>();

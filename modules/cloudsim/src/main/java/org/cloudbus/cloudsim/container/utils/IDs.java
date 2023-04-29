@@ -2,7 +2,7 @@ package org.cloudbus.cloudsim.container.utils;
 
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.core.*;
-import org.cloudbus.cloudsim.container.core.bm.BMContainerDatacenterBroker;
+import org.cloudbus.cloudsim.container.core.ContainerDatacenterBroker;
 
 import java.util.LinkedHashMap;
 import java.util.HashSet;
@@ -29,7 +29,7 @@ public final class IDs {
         COUNTERS.put(ContainerCloudlet.class, 1);
         COUNTERS.put(Container.class, 1);
         COUNTERS.put(ContainerHost.class, 1);
-        COUNTERS.put(BMContainerDatacenterBroker.class, 1);
+        COUNTERS.put(ContainerDatacenterBroker.class, 1);
         COUNTERS.put(ContainerPe.class, 1);
     }
 

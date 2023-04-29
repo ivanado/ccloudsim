@@ -9,7 +9,7 @@ import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.container.core.bm.BMContainerDatacenter;
+import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
@@ -29,13 +29,13 @@ public class HostFaultInjector extends SimEntity {
 
 
     @Getter
-    private BMContainerDatacenter datacenter;
+    private ContainerDatacenter datacenter;
 
     @Getter
     @Setter
     private int totalHostFaults = 0;
 
-    protected final void setDatacenter(@NonNull final BMContainerDatacenter datacenter) {
+    protected final void setDatacenter(@NonNull final ContainerDatacenter datacenter) {
         this.datacenter = datacenter;
     }
 
@@ -49,7 +49,7 @@ public class HostFaultInjector extends SimEntity {
     @Getter
     private double maxTimeToFail = Double.MAX_VALUE;
 
-    public HostFaultInjector(final BMContainerDatacenter datacenter) {
+    public HostFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-HostFaultInjector");
         this.setDatacenter(datacenter);
         this.lastFailedHost = null;

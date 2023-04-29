@@ -6,8 +6,8 @@ import org.cloudbus.cloudsim.container.containerProvisioners.ContainerRamProvisi
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPeProvisionerSimple;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenterCharacteristics;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.container.core.bm.BMContainerAllocationPolicySimple;
-import org.cloudbus.cloudsim.container.core.bm.BMContainerDatacenter;
+import org.cloudbus.cloudsim.container.resourceAllocators.BMContainerAllocationPolicySimple;
+import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.schedulers.ContainerSchedulerTimeSharedOverSubscription;
 import org.cloudbus.cloudsim.vmplus.util.Id;
 
@@ -46,11 +46,11 @@ public class CloudFactory {
         return pes;
     }
 
-    public static BMContainerDatacenter createDatacenter(String name, List<ContainerHost> hosts) {
+    public static ContainerDatacenter createDatacenter(String name, List<ContainerHost> hosts) {
         ContainerDatacenterCharacteristics characteristics = new ContainerDatacenterCharacteristics("x86", "Linux", "Xen",
                 hosts, 0.0, 0, 0,
                 0, 0);
-        return new BMContainerDatacenter(name, characteristics, new BMContainerAllocationPolicySimple(), 300.0);
+        return new ContainerDatacenter(name, characteristics, new BMContainerAllocationPolicySimple(), 300.0);
 
     }
 }

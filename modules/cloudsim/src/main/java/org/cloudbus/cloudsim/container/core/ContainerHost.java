@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerBwProvisioner;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerRamProvisioner;
-import org.cloudbus.cloudsim.container.core.bm.BMContainerDatacenter;
 import org.cloudbus.cloudsim.container.lists.ContainerPeList;
 import org.cloudbus.cloudsim.container.schedulers.ContainerScheduler;
 import org.cloudbus.cloudsim.*;
@@ -75,7 +74,7 @@ public class ContainerHost {
     /**
      * The datacenter where the host is placed.
      */
-    private BMContainerDatacenter datacenter;
+    private ContainerDatacenter datacenter;
 
     /**
      * Instantiates a new host.
@@ -648,7 +647,7 @@ public class ContainerHost {
      *
      * @return the data center where the host runs
      */
-    public BMContainerDatacenter getDatacenter() {
+    public ContainerDatacenter getDatacenter() {
         return datacenter;
     }
 
@@ -657,7 +656,7 @@ public class ContainerHost {
      *
      * @param datacenter the data center from this host
      */
-    public void setDatacenter(BMContainerDatacenter datacenter) {
+    public void setDatacenter(ContainerDatacenter datacenter) {
         this.datacenter = datacenter;
     }
 
@@ -722,14 +721,13 @@ public class ContainerHost {
     public double updateContainerProcessing(double clock) {
         if (!getContainerList().isEmpty()) {
             double smallerTime = Double.MAX_VALUE;
-//
+
             for (Container container : getContainerList()) {
-                double time = container.updateContainerProcessing(CloudSim.clock(), getContainerScheduler().getAllocatedMipsForContainer(container));
+                double time = container.updateContainerProcessing(clock, getContainerScheduler().getAllocatedMipsForContainer(container));
                 if (time > 0.0 && time < smallerTime) {
                     smallerTime = time;
                 }
             }
-//            Log.printLine("ContainerVm: The Smaller time is:......" + smallerTime);
 
             return smallerTime;
         }

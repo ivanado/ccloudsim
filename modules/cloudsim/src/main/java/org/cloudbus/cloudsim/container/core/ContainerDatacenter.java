@@ -1,15 +1,11 @@
-package org.cloudbus.cloudsim.container.core.bm;
+package org.cloudbus.cloudsim.container.core;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.InfoPacket;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.core.Container;
-import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
-import org.cloudbus.cloudsim.container.core.ContainerCloudlet;
-import org.cloudbus.cloudsim.container.core.ContainerDatacenterCharacteristics;
-import org.cloudbus.cloudsim.container.core.ContainerHost;
+import org.cloudbus.cloudsim.container.core.bm.BMCloudSimTags;
 import org.cloudbus.cloudsim.container.resourceAllocators.ContainerAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
@@ -20,11 +16,12 @@ import org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BMContainerDatacenter extends SimEntity {
+public class ContainerDatacenter extends SimEntity {
     private final ContainerAllocationPolicy containerAllocationPolicy;
     private final double schedulingInterval;
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private ContainerDatacenterCharacteristics characteristics;
 
     private List<ContainerHost> activeHosts;
@@ -34,7 +31,7 @@ public class BMContainerDatacenter extends SimEntity {
     private List<Container> failedContainers;
     private double lastProcessTime = 0;
 
-    public BMContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy, double schedulingInterval){
+    public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy, double schedulingInterval) {
         super(name);
         this.characteristics = characteristics;
         this.containerAllocationPolicy = containerAllocationPolicy;
@@ -51,13 +48,9 @@ public class BMContainerDatacenter extends SimEntity {
     public void startEntity() {
         Log.printConcatLine(getName(), " is starting...");
 
-
         int gisID = CloudSim.getCloudInfoServiceEntityId();
 
-
-        // send the registration to GIS
         sendNow(gisID, CloudSimTags.REGISTER_RESOURCE, getId());
-
     }
 
     @Override
@@ -131,21 +124,20 @@ public class BMContainerDatacenter extends SimEntity {
 //            case CloudSimTags.CLOUDLET_STATUS -> processCloudletStatus(ev);
 
 
-            // Ping packet
             case CloudSimTags.INFOPKT_SUBMIT -> processPingRequest(ev);
 
             case ContainerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev, true);
 //            case ContainerCloudSimTags.CONTAINER_MIGRATE -> processContainerMigrate(ev, false);
 //            case FaultInjectionCloudSimTags.CONTAINER_FAIL -> processContainerFail(ev, false);
-            case   FaultInjectionCloudSimTags.CONTAINER_DESTROY->processContainerDestroy(ev);
-            // other unknown tags are processed by this method
+            case FaultInjectionCloudSimTags.CONTAINER_DESTROY -> processContainerDestroy(ev);
+            case BMCloudSimTags.DATACENTER_PRINT -> printResourcesStatus();
             default -> processOtherEvent(ev);
         }
     }
 
     private void processContainerDestroy(SimEvent ev) {
-        int containerId=(int)ev.getData();
-       Container container= activeContainers.stream().filter(c -> c.getId()==containerId).findFirst().orElseThrow();
+        int containerId = (int) ev.getData();
+        Container container = activeContainers.stream().filter(c -> c.getId() == containerId).findFirst().orElseThrow();
         containerAllocationPolicy.deallocateContainerFromHost(container);
 
         activeContainers.remove(container);
@@ -169,20 +161,19 @@ public class BMContainerDatacenter extends SimEntity {
                 if (result) {
                     ContainerHost containerHost = containerAllocationPolicy.getContainerHost(container);
                     data[0] = containerHost.getId();
-                    if(containerHost.getId() == -1){
+                    if (containerHost.getId() == -1) {
 
                         Log.printConcatLine("The ContainerHOST ID is not known (-1) !");
                     }
-//                    Log.printConcatLine("Assigning the container#" + container.getUid() + "to VM #" + containerVm.getUid());
                     activeContainers.add(container);
                     if (container.isBeingInstantiated()) {
                         container.setBeingInstantiated(false);
                     }
-                    container.updateContainerProcessing(CloudSim.clock(),  containerAllocationPolicy.getContainerHost(container).getContainerScheduler().getAllocatedMipsForContainer(container));
+                    container.updateContainerProcessing(CloudSim.clock(), containerAllocationPolicy.getContainerHost(container).getContainerScheduler().getAllocatedMipsForContainer(container));
                 } else {
                     data[0] = -1;
                     //notAssigned.add(container);
-                    Log.printLine(String.format("Couldn't find a vm to host the container #%s", container.getUid()));
+                    Log.printLine(String.format("Couldn't find a host for the container #%s", container.getUid()));
 
                 }
                 send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), ContainerCloudSimTags.CONTAINER_CREATE_ACK, data);
@@ -200,7 +191,7 @@ public class BMContainerDatacenter extends SimEntity {
 
     @Override
     public void shutdownEntity() {
-        Log.printConcatLine(CloudSim.clock(),":", getName(), " is shutting down...");
+        Log.printConcatLine(CloudSim.clock(), ":", getName(), " is shutting down...");
     }
 
     /**
@@ -228,8 +219,7 @@ public class BMContainerDatacenter extends SimEntity {
             // checks whether this Cloudlet has finished or not
             if (cl.isFinished()) {
                 String name = CloudSim.getEntityName(cl.getUserId());
-                Log.printConcatLine(getName(), ": Warning - Cloudlet #", cl.getCloudletId(), " owned by ", name,
-                        " is already completed/finished.");
+                Log.printConcatLine(getName(), ": Warning - Cloudlet #", cl.getCloudletId(), " owned by ", name, " is already completed/finished.");
                 Log.printLine("Therefore, it is not being executed again");
                 Log.printLine();
 
@@ -255,8 +245,7 @@ public class BMContainerDatacenter extends SimEntity {
             }
 
             // process this Cloudlet to this CloudResource
-            cl.setResourceParameter(getId(), getCharacteristics().getCostPerSecond(), getCharacteristics()
-                    .getCostPerBw());
+            cl.setResourceParameter(getId(), getCharacteristics().getCostPerSecond(), getCharacteristics().getCostPerBw());
 
             int userId = cl.getUserId();
             int containerId = cl.getContainerId();
@@ -294,6 +283,7 @@ public class BMContainerDatacenter extends SimEntity {
 
         checkCloudletCompletion();
     }
+
     protected void updateCloudletProcessing() {
         // if some time passed since last processing
         // R: for term is to allow loop at simulation start. Otherwise, one initial
@@ -301,15 +291,14 @@ public class BMContainerDatacenter extends SimEntity {
         if (CloudSim.clock() < 0.111 || CloudSim.clock() > getLastProcessTime() + CloudSim.getMinTimeBetweenEvents()) {
             double smallerTime = Double.MAX_VALUE;
             for (ContainerHost host : activeHosts) {
-                // inform VMs to update processing
-//                double time = host.updateContainerVmsProcessing(CloudSim.clock());
+                // inform containers to update processing
                 double time = host.updateContainerProcessing(CloudSim.clock());
                 // what time do we expect that the next cloudlet will finish?
                 if (time > 0.0 && time < smallerTime) {
                     smallerTime = time;
                 }
             }
-            // gurantees a minimal interval before scheduling the event
+            // guarantees a minimal interval before scheduling the event
             if (smallerTime < CloudSim.clock() + CloudSim.getMinTimeBetweenEvents() + 0.01) {
                 smallerTime = CloudSim.clock() + CloudSim.getMinTimeBetweenEvents() + 0.01;
             }
@@ -322,31 +311,45 @@ public class BMContainerDatacenter extends SimEntity {
 
 
     private void setLastProcessTime(double clock) {
-        this.lastProcessTime=clock;
+        this.lastProcessTime = clock;
     }
-    public double getLastProcessTime(){
+
+    public double getLastProcessTime() {
         return lastProcessTime;
     }
 
     protected void checkCloudletCompletion() {
         for (ContainerHost host : activeHosts) {
-                for (Container container : host.getContainerList()) {
-                    while (container.getContainerCloudletScheduler().isFinishedCloudlets()) {
-                        Cloudlet cl = container.getContainerCloudletScheduler().getNextFinishedCloudlet();
-                        if (cl != null) {
-                            sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, cl);
-                        }
+            for (Container container : host.getContainerList()) {
+                while (container.getContainerCloudletScheduler().isFinishedCloudlets()) {
+                    Cloudlet cl = container.getContainerCloudletScheduler().getNextFinishedCloudlet();
+                    if (cl != null) {
+                        sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, cl);
                     }
                 }
+            }
 
         }
     }
 
     public List<ContainerHost> getHostList() {
-        return  getCharacteristics().getHostList();
+        return getCharacteristics().getHostList();
     }
 
     public List<Container> getContainerList() {
         return activeContainers;
+    }
+
+    private void printResourcesStatus() {
+        Log.printLine();
+        Log.printLine("========== DATCENTER " + getName() + " ==========");
+        getHostList().forEach(containerHost -> {
+            List<String> containers = containerHost.getContainerList().stream().map(container -> String.valueOf(container.getId())).toList();
+
+            String msg = "Host #" + containerHost.getId() + "\t AllPes=" + containerHost.getNumberOfPes() + " FreePes=" + containerHost.getNumberOfFreePes() + " Containers=" + containers;
+            Log.printLine(msg);
+        });
+
+        Log.printLine("========== ============== ==========");
     }
 }
