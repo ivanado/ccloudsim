@@ -106,7 +106,7 @@ public class ContainerDatacenterBroker extends SimEntity {
      */
     private void processTaskSubmit(SimEvent ev) {
         MicroserviceCloudlet cloudlet = (MicroserviceCloudlet) ev.getData();
-        Container container = new Container(Id.pollId(Container.class), getId(), 100, 1, 0, 0, 0, "xen", new ContainerCloudletSchedulerTimeShared(), 300);
+        Container container = new Container(Id.pollId(Container.class), getId(), 100, 15, 0, 0, 0, "xen", new ContainerCloudletSchedulerTimeShared(), 300);
         sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.CONTAINER_SUBMIT, List.of(container));
         cloudlet.setContainerId(container.getId());
         createdContainerToCloudletMap.put(container.getId(), cloudlet);

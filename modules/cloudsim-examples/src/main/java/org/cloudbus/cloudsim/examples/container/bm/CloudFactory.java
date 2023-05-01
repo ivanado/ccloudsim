@@ -50,7 +50,7 @@ public class CloudFactory {
         ContainerDatacenterCharacteristics characteristics = new ContainerDatacenterCharacteristics("x86", "Linux", "Xen",
                 hosts, 0.0, 0, 0,
                 0, 0);
-        return new ContainerDatacenter(name, characteristics, new BMContainerAllocationPolicySimple(), 300.0);
+        return new ContainerDatacenter(name, characteristics, new BMContainerAllocationPolicySimple(hosts), 300.0);
 
     }
 }

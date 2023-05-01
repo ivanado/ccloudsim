@@ -15,25 +15,26 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
     private Map<String, ContainerHost> containerHostTable;
 
 
-    public BMContainerAllocationPolicySimple() {
+    public BMContainerAllocationPolicySimple(List<ContainerHost> hosts) {
         this.freePes = new ArrayList<>();
         this.hostFreePes = new HashMap<>();
         this.containerUsedPes = new HashMap<>();
         this.containerHostTable = new HashMap<>();
+        for (ContainerHost containerHost : hosts) {
+            hostFreePes.put(containerHost.getId(), containerHost.getNumberOfFreePes());
+
+        }
     }
 
     @Override
     public boolean allocateHostForContainer(Container container, List<ContainerHost> containerHostList) {
         setContainerHostList(containerHostList);
-        for (ContainerHost containerHost : getContainerHostList()) {
-            hostFreePes.put(containerHost.getId(), containerHost.getNumberOfFreePes());
 
-        }
         int requiredPes = container.getNumberOfPes();
         boolean result = false;
 
         if (!this.containerHostTable.containsKey(container.getUid())) {
-            ContainerHost containerHost = chooseHostForContainer(requiredPes, containerHostList);
+            ContainerHost containerHost = getHost(requiredPes, containerHostList);
             result = containerHost != null && containerHost.containerCreate(container);
 
             if (result) {
@@ -55,6 +56,10 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
                 .stream()
                 .filter(host -> host.getNumberOfFreePes() >= requiredPes)
                 .findFirst().orElse(null);
+    }
+
+    private ContainerHost getHost(int requiredPes, List<ContainerHost> containerHostList){
+        return containerHostList.stream().filter(containerHost -> hostFreePes.get(containerHost.getId()) >= requiredPes).findFirst().orElse(null);
     }
 
     @Override

@@ -12,10 +12,8 @@ import org.cloudbus.cloudsim.vmplus.util.Id;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -26,15 +24,15 @@ public class UserRequestTasksScheduler extends SimEntity {
     public static final int MAX_USER_REQUESTS = 3;
     private int brokerId;
     Queue<MicroserviceCloudlet> tasksQueue;
+    List<MicroserviceCloudlet> waitingList;
     List<MicroserviceCloudlet> finishedTasks;
     List<MicroserviceCloudlet> allTasks;
-    Map<MicroserviceCloudlet, MicroserviceCloudlet> waitingList;
 
     public UserRequestTasksScheduler(String name, int brokerId) {
         super(name);
         this.brokerId = brokerId;
         tasksQueue = new LinkedList<>();
-        waitingList = new HashMap<>();
+        waitingList = new ArrayList<>();
         finishedTasks = new ArrayList<>();
         allTasks = new ArrayList<>();
     }
@@ -59,7 +57,7 @@ public class UserRequestTasksScheduler extends SimEntity {
     }
 
     private double getNextUserRequestDelay() {
-        return Math.random() * 100;
+        return Math.random() * 10;
     }
 
     @Override
@@ -76,40 +74,60 @@ public class UserRequestTasksScheduler extends SimEntity {
         MicroserviceCloudlet cloudlet = (MicroserviceCloudlet) ev.getData();
         finishedTasks.add(cloudlet);
         Log.printConcatLine(CloudSim.clock(), ": ", getName(), " finished cloudlets=", String.join(",", finishedTasks.stream().map(c -> String.valueOf(c.getCloudletId())).collect(Collectors.toList())));
+
+        //move from waiting to tasksQueue
+
+            tasksQueue.addAll(getTasksReady());
+
     }
 
+    private List<MicroserviceCloudlet> getTasksReady(){
+       List ready= waitingList.stream().filter(c->finishedTasks.contains(c.getProducerMs())).collect(Collectors.toList());
+        waitingList.removeAll(ready);
+        return ready;
+    }
+
+
+
+
+    private boolean any(MicroserviceCloudlet cloudlet) {
+        return cloudlet.getProducerMs() == null || finishedTasks.stream().anyMatch(finished -> finished.getCloudletId() == cloudlet.getProducerMs().getCloudletId());
+    }
 
     private void enqueueUserRequestTasksAndScheduleNext() {
         if (allTasks.size() < MAX_USER_REQUESTS * 3) {
             List<MicroserviceCloudlet> cloudlets = getUserRequestCloudlets();
-            tasksQueue.addAll(cloudlets);
+
+//            final Predicate<MicroserviceCloudlet> producerMsProcessed = cloudlet -> finishedTasks.contains(cloudlet.getProducerMs());
+//
+//            cloudlets.stream().filter(cloudlet -> cloudlet.getProducerMs() == null || finishedTasks.stream().anyMatch(finished -> finished.getCloudletId() == cloudlet.getProducerMs().getCloudletId()));
+
+
+            List<List<MicroserviceCloudlet>> groupedTasks = cloudlets.stream().collect(Collectors.teeing(
+                    Collectors.filtering(cloudlet -> any(cloudlet), Collectors.toList()),
+                    Collectors.filtering(cloudlet -> !any(cloudlet), Collectors.toList()),
+                    List::of));
+            tasksQueue.addAll(groupedTasks.get(0));
+            waitingList.addAll(groupedTasks.get(1));
             allTasks.addAll(cloudlets);
         }
-        if (!tasksQueue.isEmpty()) {
+
+        while (!tasksQueue.isEmpty()) {
             MicroserviceCloudlet cloudlet = tasksQueue.poll();
-            if (cloudlet.getProducerMs() == null) {
-                sendNow(brokerId, ContainerCloudSimTags.SUBMIT_TASK, cloudlet);
-
-            } else {
-                List<Integer> finishedCloudletIds = finishedTasks.stream().map(c -> c.getCloudletId()).collect(Collectors.toList());
-                if (finishedCloudletIds.contains(cloudlet.getProducerMs().getCloudletId())) {
-                    sendNow(brokerId, ContainerCloudSimTags.SUBMIT_TASK, cloudlet);
-                } else {
-                    tasksQueue.add(cloudlet);
-                }
-            }
-
-            scheduleNextUserRequest();
+            sendNow(brokerId, ContainerCloudSimTags.SUBMIT_TASK, cloudlet);
         }
 
-
+        scheduleNextUserRequest();
     }
+
+
+
 
     private List<MicroserviceCloudlet> getUserRequestCloudlets() { //represent all ms calls for a single user request
         List<MicroserviceCloudlet> userRequestCloudlets = new ArrayList<>();
-        MicroserviceCloudlet cloudlet = new MicroserviceCloudlet(Id.pollId(Cloudlet.class), 10000, 10, 0, 0, new UtilizationModelFull());
-        MicroserviceCloudlet cloudlet2 = new MicroserviceCloudlet(Id.pollId(Cloudlet.class), 10000, 10, 0, 0, new UtilizationModelFull());
-        MicroserviceCloudlet cloudlet3 = new MicroserviceCloudlet(Id.pollId(Cloudlet.class), 10000, 10, 0, 0, new UtilizationModelFull());
+        MicroserviceCloudlet cloudlet = new MicroserviceCloudlet(Id.pollId(Cloudlet.class), 100000, 10, 0, 0, new UtilizationModelFull());
+        MicroserviceCloudlet cloudlet2 = new MicroserviceCloudlet(Id.pollId(Cloudlet.class), 100000, 10, 0, 0, new UtilizationModelFull());
+        MicroserviceCloudlet cloudlet3 = new MicroserviceCloudlet(Id.pollId(Cloudlet.class), 100000, 10, 0, 0, new UtilizationModelFull());
         cloudlet2.setProducerMs(cloudlet);
         cloudlet2.addConsumerMs(cloudlet3);
         cloudlet.addConsumerMs(cloudlet2);
