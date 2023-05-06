@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.schedulers.UserRequestTasksScheduler;
+import org.cloudbus.cloudsim.container.schedulers.SomeRequestTasksScheduler;
 import org.cloudbus.cloudsim.container.schedulers.ContainerCloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
@@ -41,7 +41,7 @@ public class ContainerDatacenterBroker extends SimEntity {
     private Map<Integer, Cloudlet> processedCloudlets;
 
 
-    private UserRequestTasksScheduler taskScheduler;
+    private SomeRequestTasksScheduler taskScheduler;
 
     public ContainerDatacenterBroker(String name) {
         super(name);
@@ -51,7 +51,7 @@ public class ContainerDatacenterBroker extends SimEntity {
         scheduledCloudlets = new HashMap<>();
         createdContainers = new ArrayList<>();
         runningContainers = new ArrayList<>();
-        taskScheduler = new UserRequestTasksScheduler("BM-TaskScheduler", getId());
+        taskScheduler = new SomeRequestTasksScheduler("BM-TaskScheduler", getId());
     }
 
     @Override
@@ -68,16 +68,6 @@ public class ContainerDatacenterBroker extends SimEntity {
 
             // Resource characteristics answer
             case CloudSimTags.RESOURCE_CHARACTERISTICS -> processResourceCharacteristics(ev);
-            case ContainerCloudSimTags.SUBMIT_TASK -> processTaskSubmit(ev);
-
-            // A finished cloudlet returned
-            case CloudSimTags.CLOUDLET_RETURN -> processCloudletReturn(ev);
-
-            // if the simulation finishes
-            case CloudSimTags.END_OF_SIMULATION -> shutdownEntity();
-            case ContainerCloudSimTags.CONTAINER_CREATE_ACK -> processContainerCreate(ev);
-            case CloudSimTags.CLOUDLET_SUBMIT_ACK ->
-                    processCloudletSubmit(ev);//just add the cloudlet on the running list
 
             default -> processOtherEvent(ev);
         }
@@ -137,7 +127,7 @@ public class ContainerDatacenterBroker extends SimEntity {
                         ", is created on host #", hostId);
                 totalContainersCreated++;
 
-                sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.DATACENTER_PRINT);
+                sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.CONTAINER_DC_LOG);
 
 //                ---->process the cloudlet on created container
                 Cloudlet cloudletToProcess = createdContainerToCloudletMap.get(containerId);
@@ -159,7 +149,7 @@ public class ContainerDatacenterBroker extends SimEntity {
                 " returned. ", totalProcessedCloudlets, " finished Cloudlets = ", String.join(", ", processedCloudlets.keySet().stream().map(c -> c.toString()).collect(Collectors.toList())));
         //deallocate the container used for cloudlet processing
         sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.CONTAINER_DESTROY, cloudlet.getContainerId());
-        sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_COMPLETE, cloudlet);
+        sendNow(taskScheduler.getId(), ContainerCloudSimTags.USER_REQUEST_RETURN, cloudlet);
 
 
         if (this.taskScheduler.allTasksProcessed()) {
@@ -199,8 +189,6 @@ public class ContainerDatacenterBroker extends SimEntity {
 
         if (getDatacenterCharacteristicsList().size() == getDatacenterIdsList().size()) {
             getDatacenterCharacteristicsList().clear();
-//            setDatacenterRequestedIdsList(new ArrayList<>());
-//            createVmsInDatacenter(getDatacenterIdsList().get(0));
         }
     }
 
@@ -208,8 +196,6 @@ public class ContainerDatacenterBroker extends SimEntity {
         setDatacenterIdsList(CloudSim.getCloudResourceList());
         setDatacenterCharacteristicsList(new HashMap<>());
 
-        //Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloud Resource List received with ",
-//                getDatacenterIdsList().size(), " resource(s)");
 
         for (Integer datacenterId : getDatacenterIdsList()) {
             sendNow(datacenterId, CloudSimTags.RESOURCE_CHARACTERISTICS, getId());

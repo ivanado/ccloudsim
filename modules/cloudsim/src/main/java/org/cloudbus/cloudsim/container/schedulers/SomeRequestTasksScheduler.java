@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
-public class UserRequestTasksScheduler extends SimEntity {
+public class SomeRequestTasksScheduler extends SimEntity {
 
     public static final int MAX_USER_REQUESTS = 3;
     private int brokerId;
@@ -28,7 +28,7 @@ public class UserRequestTasksScheduler extends SimEntity {
     List<MicroserviceCloudlet> finishedTasks;
     List<MicroserviceCloudlet> allTasks;
 
-    public UserRequestTasksScheduler(String name, int brokerId) {
+    public SomeRequestTasksScheduler(String name, int brokerId) {
         super(name);
         this.brokerId = brokerId;
         tasksQueue = new LinkedList<>();
@@ -49,9 +49,9 @@ public class UserRequestTasksScheduler extends SimEntity {
     }
 
     private void scheduleNextUserRequest() {
-        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS;
+        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != ContainerCloudSimTags.USER_REQUEST_SUBMIT;
         if (CloudSim.isFutureEventQueued(otherEventsPredicate)) {
-            schedule(getId(), getNextUserRequestDelay(), ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS);
+            schedule(getId(), getNextUserRequestDelay(), ContainerCloudSimTags.USER_REQUEST_SUBMIT);
         }
 
     }
@@ -63,9 +63,9 @@ public class UserRequestTasksScheduler extends SimEntity {
     @Override
     public void processEvent(SimEvent ev) {
 
-        if (ev.getTag() == ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS) {
+        if (ev.getTag() == ContainerCloudSimTags.USER_REQUEST_SUBMIT) {
             enqueueUserRequestTasksAndScheduleNext();
-        } else if (ev.getTag() == ContainerCloudSimTags.TASK_COMPLETE) {
+        } else if (ev.getTag() == ContainerCloudSimTags.TASK_RETURN) {
             processTaskComplete(ev);
         }
     }
@@ -112,7 +112,7 @@ public class UserRequestTasksScheduler extends SimEntity {
 
         while (!tasksQueue.isEmpty()) {
             MicroserviceCloudlet cloudlet = tasksQueue.poll();
-            sendNow(brokerId, ContainerCloudSimTags.SUBMIT_TASK, cloudlet);
+            sendNow(brokerId, ContainerCloudSimTags.TASK_SUBMIT, cloudlet);
         }
 
         scheduleNextUserRequest();
@@ -145,7 +145,7 @@ public class UserRequestTasksScheduler extends SimEntity {
     }
 
     boolean isScheduleTasksEventQueued() {
-        final Predicate<SimEvent> scheduleTasksEventsPredicate = evt -> evt.getTag() == ContainerCloudSimTags.SCHEDULE_USER_REQUEST_TASKS;
+        final Predicate<SimEvent> scheduleTasksEventsPredicate = evt -> evt.getTag() == ContainerCloudSimTags.USER_REQUEST_SUBMIT;
         return CloudSim.isFutureEventQueued(scheduleTasksEventsPredicate);
     }
 

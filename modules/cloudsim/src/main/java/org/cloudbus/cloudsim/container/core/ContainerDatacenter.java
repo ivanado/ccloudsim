@@ -80,10 +80,10 @@ public class ContainerDatacenter extends SimEntity {
 
             // New Cloudlet arrives, but the sender asks for an ack
             case CloudSimTags.CLOUDLET_SUBMIT_ACK -> processCloudletSubmit(ev, true);
-            case ContainerCloudSimTags.HOST_DATACENTER_EVENT -> {
-                updateCloudletProcessing();
-                checkCloudletCompletion();
-            }
+//            case ContainerCloudSimTags.HOST_DATACENTER_EVENT -> {
+//                updateCloudletProcessing();
+//                checkCloudletCompletion();
+//            }
 //
 //            // Cancels a previously submitted Cloudlet
 //            case CloudSimTags.CLOUDLET_CANCEL -> processCloudlet(ev, CloudSimTags.CLOUDLET_CANCEL);
@@ -125,7 +125,7 @@ public class ContainerDatacenter extends SimEntity {
 //            case ContainerCloudSimTags.CONTAINER_MIGRATE -> processContainerMigrate(ev, false);
 //            case FaultInjectionCloudSimTags.CONTAINER_FAIL -> processContainerFail(ev, false);
             case ContainerCloudSimTags.CONTAINER_DESTROY -> processContainerDestroy(ev);
-            case ContainerCloudSimTags.DATACENTER_PRINT -> printResourcesStatus();
+            case ContainerCloudSimTags.CONTAINER_DC_LOG -> printResourcesStatus();
             default -> processOtherEvent(ev);
         }
     }
@@ -255,7 +255,7 @@ public class ContainerDatacenter extends SimEntity {
             // if this cloudlet is in the exec queue
             if (estimatedFinishTime > 0.0 && !Double.isInfinite(estimatedFinishTime)) {
                 estimatedFinishTime += fileTransferTime;
-                send(getId(), estimatedFinishTime, ContainerCloudSimTags.HOST_DATACENTER_EVENT);
+                send(getId(), estimatedFinishTime, ContainerCloudSimTags.CONTAINER_DC_EVENT);
             }
 
             if (ack) {
@@ -298,7 +298,7 @@ public class ContainerDatacenter extends SimEntity {
                 smallerTime = CloudSim.clock() + CloudSim.getMinTimeBetweenEvents() + 0.01;
             }
             if (smallerTime != Double.MAX_VALUE) {
-                schedule(getId(), (smallerTime - CloudSim.clock()), ContainerCloudSimTags.HOST_DATACENTER_EVENT);
+                schedule(getId(), (smallerTime - CloudSim.clock()), ContainerCloudSimTags.CONTAINER_DC_EVENT);
             }
             setLastProcessTime(CloudSim.clock());
         }
