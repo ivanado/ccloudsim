@@ -77,17 +77,15 @@ public class UserRequestTasksScheduler extends SimEntity {
 
         //move from waiting to tasksQueue
 
-            tasksQueue.addAll(getTasksReady());
+        tasksQueue.addAll(getTasksReady());
 
     }
 
-    private List<MicroserviceCloudlet> getTasksReady(){
-       List ready= waitingList.stream().filter(c->finishedTasks.contains(c.getProducerMs())).collect(Collectors.toList());
+    private List<MicroserviceCloudlet> getTasksReady() {
+        List ready = waitingList.stream().filter(c -> finishedTasks.contains(c.getProducerMs())).collect(Collectors.toList());
         waitingList.removeAll(ready);
         return ready;
     }
-
-
 
 
     private boolean any(MicroserviceCloudlet cloudlet) {
@@ -119,8 +117,6 @@ public class UserRequestTasksScheduler extends SimEntity {
 
         scheduleNextUserRequest();
     }
-
-
 
 
     private List<MicroserviceCloudlet> getUserRequestCloudlets() { //represent all ms calls for a single user request

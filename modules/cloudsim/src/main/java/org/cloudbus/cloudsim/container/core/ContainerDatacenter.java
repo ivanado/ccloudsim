@@ -10,7 +10,6 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -128,7 +127,7 @@ public class ContainerDatacenter extends SimEntity {
             case ContainerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev, true);
 //            case ContainerCloudSimTags.CONTAINER_MIGRATE -> processContainerMigrate(ev, false);
 //            case FaultInjectionCloudSimTags.CONTAINER_FAIL -> processContainerFail(ev, false);
-            case FaultInjectionCloudSimTags.CONTAINER_DESTROY -> processContainerDestroy(ev);
+            case ContainerCloudSimTags.CONTAINER_DESTROY -> processContainerDestroy(ev);
             case ContainerCloudSimTags.DATACENTER_PRINT -> printResourcesStatus();
             default -> processOtherEvent(ev);
         }

@@ -49,6 +49,11 @@ public class ContainerCloudSimTags {
     public static final int HOST_DATACENTER_EVENT = CONTAINERS_ON_HOSTS_BASE + 5;
 
     public static final int DATACENTER_PRINT = CONTAINERS_ON_HOSTS_BASE + 6;
+    public static final int CONTAINER_DESTROY = CONTAINERS_ON_HOSTS_BASE + 7;
+    public static final int HOST_FAIL = CONTAINERS_ON_HOSTS_BASE + 8;
+    public static final int CONTAINER_FAIL = CONTAINERS_ON_HOSTS_BASE + 9;
+    public static final int HOST_RECOVER = CONTAINERS_ON_HOSTS_BASE + 10;
+
     private ContainerCloudSimTags() {
         // TODO Auto-generated constructor stub
         /** Private Constructor */

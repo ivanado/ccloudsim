@@ -10,7 +10,6 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags;
 import org.cloudbus.cloudsim.vmplus.util.Id;
 
 import java.util.ArrayList;
@@ -159,7 +158,7 @@ public class ContainerDatacenterBroker extends SimEntity {
         Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloudlet ", cloudlet.getCloudletId(),
                 " returned. ", totalProcessedCloudlets, " finished Cloudlets = ", String.join(", ", processedCloudlets.keySet().stream().map(c -> c.toString()).collect(Collectors.toList())));
         //deallocate the container used for cloudlet processing
-        sendNow(datacenterIdsList.get(0), FaultInjectionCloudSimTags.CONTAINER_DESTROY, cloudlet.getContainerId());
+        sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.CONTAINER_DESTROY, cloudlet.getContainerId());
         sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_COMPLETE, cloudlet);
 
 

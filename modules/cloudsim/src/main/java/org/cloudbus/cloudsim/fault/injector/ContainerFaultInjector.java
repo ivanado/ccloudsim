@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.cloudbus.cloudsim.container.core.Container;
+import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -16,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags.CONTAINER_FAIL;
-import static org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags.HOST_FAIL;
+
 
 public class ContainerFaultInjector extends SimEntity {
     private Map<String, List<Double>> containerFailureTimes;
@@ -38,15 +38,15 @@ public class ContainerFaultInjector extends SimEntity {
     }
 
     private void scheduleContainerFault() {
-        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != HOST_FAIL;
+        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != ContainerCloudSimTags.HOST_FAIL;
         if (CloudSim.clock() < getMaxTimeToFail() || CloudSim.isFutureEventQueued(otherEventsPredicate)) {
-            schedule(getId(), getNextFaultDelay(), CONTAINER_FAIL);
+            schedule(getId(), getNextFaultDelay(), ContainerCloudSimTags.CONTAINER_FAIL);
         }
     }
 
     @Override
     public void processEvent(SimEvent ev) {
-        if (ev.getTag() == CONTAINER_FAIL) {
+        if (ev.getTag() == ContainerCloudSimTags.CONTAINER_FAIL) {
 
             generateContainerFaultAndScheduleNext();
         }
@@ -68,7 +68,7 @@ public class ContainerFaultInjector extends SimEntity {
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
                 " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
 
-        sendNow(datacenter.getId(), FaultInjectionCloudSimTags.CONTAINER_DESTROY, container.getId());
+        sendNow(datacenter.getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container.getId());
     }
 
     private Container getRandomContainer() {

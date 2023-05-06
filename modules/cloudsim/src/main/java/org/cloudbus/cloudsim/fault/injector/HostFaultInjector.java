@@ -8,6 +8,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.core.Container;
+import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -21,9 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-
-import static org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags.HOST_FAIL;
-import static org.cloudbus.cloudsim.fault.injector.FaultInjectionCloudSimTags.HOST_RECOVER;
 
 public class HostFaultInjector extends SimEntity {
 
@@ -63,9 +61,9 @@ public class HostFaultInjector extends SimEntity {
     }
 
     private void scheduleHostFault() {
-        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != HOST_FAIL;
+        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != ContainerCloudSimTags.HOST_FAIL;
         if (CloudSim.clock() < getMaxTimeToFail() || CloudSim.isFutureEventQueued(otherEventsPredicate)) {
-            schedule(getId(), getNextFaultDelay(), HOST_FAIL);
+            schedule(getId(), getNextFaultDelay(), ContainerCloudSimTags.HOST_FAIL);
         }
     }
 
@@ -78,9 +76,9 @@ public class HostFaultInjector extends SimEntity {
 
     @Override
     public void processEvent(SimEvent ev) {
-        if (ev.getTag() == HOST_FAIL) {
+        if (ev.getTag() == ContainerCloudSimTags.HOST_FAIL) {
             generateHostFaultAndScheduleNext();
-        } else if (ev.getTag() == HOST_RECOVER) {
+        } else if (ev.getTag() == ContainerCloudSimTags.HOST_RECOVER) {
             recoverHost();
         }
     }
@@ -108,9 +106,9 @@ public class HostFaultInjector extends SimEntity {
     }
 
     private void scheduleHostRecovery(ContainerHost host) {
-        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != HOST_FAIL;
+        final Predicate<SimEvent> otherEventsPredicate = evt -> evt.getTag() != ContainerCloudSimTags.HOST_FAIL;
         if (CloudSim.clock() < getMaxTimeToFail() || CloudSim.isFutureEventQueued(otherEventsPredicate)) {
-            schedule(getId(), 3600, HOST_RECOVER);
+            schedule(getId(), 3600, ContainerCloudSimTags.HOST_RECOVER);
         }
 
     }
@@ -172,7 +170,7 @@ public class HostFaultInjector extends SimEntity {
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
                 " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
 
-        sendNow(datacenter.getId(), FaultInjectionCloudSimTags.CONTAINER_DESTROY, container.getId());
+        sendNow(datacenter.getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container.getId());
     }
 
 
