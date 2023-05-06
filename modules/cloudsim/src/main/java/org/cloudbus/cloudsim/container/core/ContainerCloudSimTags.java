@@ -5,17 +5,7 @@ public class ContainerCloudSimTags {
      * Starting constant value for network-related tags
      **/
     private static final int ContainerSimBASE = 400;
-    /**
-     * Denotes the receiving of a cloudlet  in the data center broker
-     * entity.
-     */
-    public static final int FIND_VM_FOR_CLOUDLET = ContainerSimBASE + 1;
 
-    /**
-     * Denotes the creating a new VM is required in the data center.
-     * Invoked in the data center broker.
-     */
-    public static final int CREATE_NEW_VM = ContainerSimBASE + 2;
     /**
      * Denotes the containers are submitted to the data center.
      * Invoked in the data center broker.
@@ -27,32 +17,56 @@ public class ContainerCloudSimTags {
      * Invoked in the data center.
      */
     public static final int CONTAINER_CREATE_ACK = ContainerSimBASE + 4;
+
     /**
-     * Denotes the containers are migrated to another Vm.
-     * Invoked in the data center.
+     * Denotes the containers are failed in the data center.
+     * Invoked in the failure injector.
      */
-    public static final int CONTAINER_MIGRATE = ContainerSimBASE + 10;
+    public static final int CONTAINER_FAIL = ContainerSimBASE + 5;
     /**
-     * Denotes a new VM is created in data center by the local scheduler
-     * Invoked in the data center.
+     * Denotes the containers are deallocated in the data center.
+     * Invoked in the dc
      */
-    public static final int VM_NEW_CREATE = ContainerSimBASE + 11;
-
-    private static final int CONTAINERS_ON_HOSTS_BASE = ContainerSimBASE + 1000;
-
-    public static final int SCHEDULE_USER_REQUEST_TASKS = CONTAINERS_ON_HOSTS_BASE + 2;
-
-    public static final int SUBMIT_TASK = CONTAINERS_ON_HOSTS_BASE + 3;
-
-    public static final int TASK_COMPLETE = CONTAINERS_ON_HOSTS_BASE + 4;
-
-    public static final int HOST_DATACENTER_EVENT = CONTAINERS_ON_HOSTS_BASE + 5;
-
-    public static final int DATACENTER_PRINT = CONTAINERS_ON_HOSTS_BASE + 6;
-    public static final int CONTAINER_DESTROY = CONTAINERS_ON_HOSTS_BASE + 7;
-    public static final int HOST_FAIL = CONTAINERS_ON_HOSTS_BASE + 8;
-    public static final int CONTAINER_FAIL = CONTAINERS_ON_HOSTS_BASE + 9;
-    public static final int HOST_RECOVER = CONTAINERS_ON_HOSTS_BASE + 10;
+    public static final int CONTAINER_DESTROY = ContainerSimBASE + 6;
+    /**
+     * Denotes the containers are deallocated in the data center.
+     * Invoked in the dc
+     */
+    public static final int CONTAINER_DC_EVENT = ContainerSimBASE + 7; //invoked repeatedly to process the cloudlet
+    /**
+     * Denotes the user task assigned to the data center.
+     * Invoked in the Task scheduler
+     */
+    public static final int USER_TASK_SUBMIT = ContainerSimBASE + 8;
+    /**
+     * Denotes the user task is finished.
+     * Invoked in the Task scheduler
+     */
+    public static final int USER_TASK_RETURN = ContainerSimBASE + 9;
+    /**
+     * Denotes the  host failure via injection.
+     * Invoked in the Task scheduler
+     */
+    public static final int HOST_FAIL = ContainerSimBASE + 10;
+    /**
+     * Denotes the  host deallocated from DC.
+     */
+    public static final int HOST_DESTROY = ContainerSimBASE + 11;
+    /**
+     * Denotes the  host recovery from failure.
+     * Invoked in the Injection
+     */
+    public static final int HOST_RECOVER = ContainerSimBASE + 12;
+    /**
+     * Denotes the  host recovered from failure.
+     * Invoked in the data centar
+     */
+    public static final int HOST_RECOVER_ACK = ContainerSimBASE + 13;
+    /**
+     * Denotes the DC info is logged to console.
+     * Invoked in the dc
+     */
+    public static final int CONTAINER_DC_LOG = ContainerSimBASE + 14;
 
     private ContainerCloudSimTags() {
         // TODO Auto-generated constructor stub
