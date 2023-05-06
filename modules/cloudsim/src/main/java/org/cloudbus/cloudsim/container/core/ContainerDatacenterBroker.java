@@ -41,7 +41,7 @@ public class ContainerDatacenterBroker extends SimEntity {
     @Override
     public void processEvent(SimEvent ev) {
         switch (ev.getTag()) {
-            case CloudSimTags.RESOURCE_CHARACTERISTICS_REQUEST -> processResourceCharacteristicsRequest(ev);
+            case CloudSimTags.RESOURCE_CHARACTERISTICS_REQUEST -> processResourceCharacteristicsRequest();
             case CloudSimTags.RESOURCE_CHARACTERISTICS -> processResourceCharacteristics(ev);
             case ContainerCloudSimTags.TASK_SUBMIT -> processTaskSubmit(ev);
             case ContainerCloudSimTags.CONTAINER_CREATE_ACK -> processContainerAllocated(ev);
@@ -92,7 +92,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
     private void processCloudletReturn(SimEvent ev) {
-        Task task = null;
+        Task task;
         if(ev.getData() instanceof Task){
              task = (Task) ev.getData();
         }else{
@@ -102,7 +102,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
         Log.printLine(getName(), ": Cloudlet ", task.cloudlet.getCloudletId(),
-                " returned. ", taskScheduler.getProcessedTasksCount(), " finished Cloudlets = ", String.join(", ", taskScheduler.finishedTasks.stream().map(t -> t.cloudlet.toString()).collect(Collectors.toList())));
+                " returned. ", taskScheduler.getProcessedTasksCount(), " finished Cloudlets = ", taskScheduler.finishedTasks.stream().map(t -> String.valueOf(t.cloudlet.getCloudletId())).collect(Collectors.joining(", ")));
         //deallocate the container used for cloudlet processing
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task);
         sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_RETURN, task);
@@ -135,11 +135,10 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
     private void processResourceCharacteristics(SimEvent ev) {
-        ContainerDatacenterCharacteristics characteristics = (ContainerDatacenterCharacteristics) ev.getData();
-        this.datacenterCharacteristics = characteristics;
+        this.datacenterCharacteristics = (ContainerDatacenterCharacteristics) ev.getData();
     }
 
-    private void processResourceCharacteristicsRequest(SimEvent ev) {
+    private void processResourceCharacteristicsRequest() {
         this.datacenterId = CloudSim.getCloudResourceList().get(0);
         sendNow(datacenterId, CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
     }

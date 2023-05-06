@@ -73,7 +73,7 @@ public class ContainerHostFaultInjector extends SimEntity {
         if (host == null) {
             return;
         }
-        Log.printConcatLine(getClass().getSimpleName(), ": Failing host ", host.getId(), "...");
+        Log.printLine(getClass().getSimpleName(), ": Failing host ", host.getId(), "...");
 
 
         failHost(host);
@@ -86,9 +86,9 @@ public class ContainerHostFaultInjector extends SimEntity {
         final String msg = containerIds.size() > 0
                 ? "affecting all its %d containers [%s]".formatted(containerIds.size(), String.join(",", containerIds))
                 : "but there was no running containers";
-        Log.printConcatLine(CloudSim.clock(), ":",
-                String.format(" %s: All %d PEs from host #%s failed at %f, %s.",
-                        getClass().getSimpleName(),
+        Log.printLine(getClass().getSimpleName(),
+                String.format(" : All %d PEs from host #%s failed at %f, %s.",
+
                         host.getNumberOfPes(), host.getId(),
                         CloudSim.clock(), msg));
         failHostContainers(host);
@@ -99,11 +99,11 @@ public class ContainerHostFaultInjector extends SimEntity {
 
     private void failHostContainers(ContainerHost host) {
         List<Container> hostContainers = host.getContainerList();
-        hostContainers.forEach(container -> failHostContainer(container));
+        hostContainers.forEach(this::failHostContainer);
     }
 
     private void failHostContainer(Container container) {
-        Log.printConcatLine(CloudSim.clock(), ": ", getClass().getSimpleName(),
+        Log.printLine(getClass().getSimpleName(),
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
                 " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
 //        sendNow(datacenter.getId(), ContainerCloudSimTags.CLOUDLET_FAIL, container);

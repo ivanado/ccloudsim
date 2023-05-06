@@ -82,7 +82,10 @@ public class UserRequestScheduler extends SimEntity {
         waitingTasks.addAll(testRequest.getTasks(false));
 
         submitTasks();
-//  TODO      scheduleNextUserRequest();
+        if(allTasks.size()<10){
+            scheduleNextUserRequest();
+        }
+
 
     }
 

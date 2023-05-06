@@ -4,6 +4,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenterBroker;
+import org.cloudbus.cloudsim.container.faultInjectors.ContainerHostFaultInjector;
 import org.cloudbus.cloudsim.core.CloudSim;
 
 import java.util.Calendar;
@@ -20,6 +21,7 @@ public class BMContainerCloudExample {
 
         ContainerDatacenter datacenter = CloudFactory.createDatacenter("BM-DC", hosts);
         ContainerDatacenterBroker broker = new ContainerDatacenterBroker("BM-Broker");
+        ContainerHostFaultInjector hostFaultInjector = new ContainerHostFaultInjector(datacenter);
         CloudSim.startSimulation();
 
         broker.printCloudletReport();
