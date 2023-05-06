@@ -92,9 +92,14 @@ public class ContainerDatacenter extends SimEntity {
 
 
     private void processContainerDestroy(SimEvent ev) {
-        Task task = (Task) ev.getData();
+        Container container;
+        if (ev.getData() instanceof Task) {
+            Task task = (Task) ev.getData();
+            container = task.container;
+        } else {
+            container = (Container) ev.getData();
+        }
 
-        Container container = task.container;
         containerAllocationPolicy.deallocateContainerFromHost(container);
 
         activeContainers.remove(container);
@@ -118,7 +123,7 @@ public class ContainerDatacenter extends SimEntity {
                 data[0] = containerHost.getId();
                 if (containerHost.getId() == -1) {
 
-                    Log.printLine(getName(),": The ContainerHOST ID is not known (-1) !");
+                    Log.printLine(getName(), ": The ContainerHOST ID is not known (-1) !");
                 }
                 activeContainers.add(task.container);
                 if (task.container.isBeingInstantiated()) {
@@ -136,7 +141,7 @@ public class ContainerDatacenter extends SimEntity {
 
     private void processOtherEvent(SimEvent ev) {
         if (ev == null) {
-            Log.printLine( getName(), ".processOtherEvent(): Error - an event is null.");
+            Log.printLine(getName(), ".processOtherEvent(): Error - an event is null.");
         }
     }
 

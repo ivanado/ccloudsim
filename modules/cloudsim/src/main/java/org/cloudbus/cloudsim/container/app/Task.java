@@ -23,9 +23,9 @@ public class Task {
 
     public Task(Microservice microservice, int brokerId) {
         this.microservice = microservice;
-        this.cloudlet = new ContainerCloudlet(IDs.pollId(ContainerCloudlet.class), 1000, 2, 0, 0, new UtilizationModelFull(), new UtilizationModelNull(), new UtilizationModelNull());
+        this.cloudlet = new ContainerCloudlet(IDs.pollId(ContainerCloudlet.class), 1000, 10, 1, 1, new UtilizationModelFull(), new UtilizationModelNull(), new UtilizationModelNull());
         this.cloudlet.setUserId(brokerId);
-        this.container = new Container(IDs.pollId(ContainerCloudlet.class), brokerId, 1000, 3, 0, 0, 0, "", new ContainerCloudletSchedulerTimeShared(), 300);
+        this.container = new Container(IDs.pollId(ContainerCloudlet.class), brokerId, 10, 10, 0, 0, 0, "", new ContainerCloudletSchedulerTimeShared(), 300);
         this.provider = null;
         this.consumer = null;
 

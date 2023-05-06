@@ -107,7 +107,7 @@ public class ContainerHostFaultInjector extends SimEntity {
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
                 " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
 //        sendNow(datacenter.getId(), ContainerCloudSimTags.CLOUDLET_FAIL, container);
-        sendNow(datacenter.getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container.getId());
+        sendNow(datacenter.getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container);
     }
 
     private ContainerHost getRandomHost() {
