@@ -22,11 +22,9 @@ public class ContainerDatacenter extends SimEntity {
     @Setter
     private ContainerDatacenterCharacteristics characteristics;
 
-    private List<ContainerHost> activeHosts;
+    private List<ContainerHost> allHosts;
 
     private List<Container> activeContainers;
-    private List<ContainerHost> failedHosts;
-    private List<Container> failedContainers;
     private double lastProcessTime = 0;
 
     public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy, double schedulingInterval) {
@@ -34,12 +32,11 @@ public class ContainerDatacenter extends SimEntity {
         this.characteristics = characteristics;
         this.containerAllocationPolicy = containerAllocationPolicy;
         this.schedulingInterval = schedulingInterval;
-        this.activeHosts = new ArrayList<>();
+        this.allHosts = new ArrayList<>();
         this.activeContainers = new ArrayList<>();
-        this.failedContainers = new ArrayList<>();
-        this.failedHosts = new ArrayList<>();
 
-        this.activeHosts.addAll(this.characteristics.getHostList());
+
+        this.allHosts.addAll(this.characteristics.getHostList());
     }
 
     @Override
@@ -147,7 +144,7 @@ public class ContainerDatacenter extends SimEntity {
         List<Container> containerList = (List<Container>) ev.getData();
 
         for (Container container : containerList) {
-            boolean result = containerAllocationPolicy.allocateHostForContainer(container, this.activeHosts);
+            boolean result = containerAllocationPolicy.allocateHostForContainer(container, this.allHosts);
             if (ack) {
                 int[] data = new int[3];
                 data[1] = container.getId();
@@ -288,7 +285,7 @@ public class ContainerDatacenter extends SimEntity {
         // simulation step is skipped and schedulers are not properly initialized
         if (CloudSim.clock() < 0.111 || CloudSim.clock() > getLastProcessTime() + CloudSim.getMinTimeBetweenEvents()) {
             double smallerTime = Double.MAX_VALUE;
-            for (ContainerHost host : activeHosts) {
+            for (ContainerHost host : allHosts) {
                 // inform containers to update processing
                 double time = host.updateContainerProcessing(CloudSim.clock());
                 // what time do we expect that the next cloudlet will finish?
@@ -317,7 +314,7 @@ public class ContainerDatacenter extends SimEntity {
     }
 
     protected void checkCloudletCompletion() {
-        for (ContainerHost host : activeHosts) {
+        for (ContainerHost host : allHosts) {
             for (Container container : host.getContainerList()) {
                 while (container.getContainerCloudletScheduler().isFinishedCloudlets()) {
                     Cloudlet cl = container.getContainerCloudletScheduler().getNextFinishedCloudlet();
@@ -349,5 +346,13 @@ public class ContainerDatacenter extends SimEntity {
         });
 
         Log.printLine("========== ============== ==========");
+    }
+
+    public boolean hasRunningHosts() {
+        return this.allHosts.stream().anyMatch(h->!h.isFailed());
+    }
+
+    public List<ContainerHost> getRunningHosts(){
+        return this.allHosts.stream().filter(h->!h.isFailed()).toList();
     }
 }
