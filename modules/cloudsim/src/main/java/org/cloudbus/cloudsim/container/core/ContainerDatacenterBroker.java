@@ -1,16 +1,12 @@
 package org.cloudbus.cloudsim.container.core;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.schedulers.SomeRequestTasksScheduler;
-import org.cloudbus.cloudsim.container.schedulers.ContainerCloudletSchedulerTimeShared;
+import org.cloudbus.cloudsim.container.app.Task;
+import org.cloudbus.cloudsim.container.schedulers.UserRequestScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.vmplus.util.Id;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,137 +15,97 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ContainerDatacenterBroker extends SimEntity {
-    @Getter
-    @Setter
-    private List<Integer> datacenterIdsList;
-    @Getter
-    @Setter
-    protected Map<Integer, ContainerDatacenterCharacteristics> datacenterCharacteristicsList;
 
 
-    private Map<Integer, Integer> containerToHostMap;
+    public Map<Integer, Integer> containerToHostMap;
+    public Integer datacenterId;
+    public ContainerDatacenterCharacteristics datacenterCharacteristics;
 
-    private List<Integer> createdContainers;
-    private Map<Integer, Cloudlet> createdContainerToCloudletMap;
+    public List<Task> submittedTasks;
 
-    private int totalContainersCreated = 0;
-    private int totalProcessedCloudlets = 0;
-    private int totalScheduledCloudlets = 0;
-
-    private List<Integer> runningContainers;
-    private Map<Integer, Cloudlet> scheduledCloudlets;
-    private Map<Integer, Cloudlet> processedCloudlets;
-
-
-    private SomeRequestTasksScheduler taskScheduler;
+    public UserRequestScheduler taskScheduler;
 
     public ContainerDatacenterBroker(String name) {
         super(name);
-        containerToHostMap = new HashMap<>();
-        createdContainerToCloudletMap = new HashMap<>();
-        processedCloudlets = new HashMap<>();
-        scheduledCloudlets = new HashMap<>();
-        createdContainers = new ArrayList<>();
-        runningContainers = new ArrayList<>();
-        taskScheduler = new SomeRequestTasksScheduler("BM-TaskScheduler", getId());
+        this.containerToHostMap = new HashMap<>();
+        this.taskScheduler = new UserRequestScheduler("BM-TaskScheduler", getId());
+        this.submittedTasks = new ArrayList<>();
     }
 
     @Override
     public void startEntity() {
-        Log.printConcatLine(getName(), " is starting...");
+        Log.printLine(getName(), " is starting...");
         schedule(getId(), 0, CloudSimTags.RESOURCE_CHARACTERISTICS_REQUEST);
     }
 
     @Override
     public void processEvent(SimEvent ev) {
         switch (ev.getTag()) {
-            // Resource characteristics request
             case CloudSimTags.RESOURCE_CHARACTERISTICS_REQUEST -> processResourceCharacteristicsRequest(ev);
-
-            // Resource characteristics answer
             case CloudSimTags.RESOURCE_CHARACTERISTICS -> processResourceCharacteristics(ev);
-
+            case ContainerCloudSimTags.TASK_SUBMIT -> processTaskSubmit(ev);
+            case ContainerCloudSimTags.CONTAINER_CREATE_ACK -> processContainerAllocated(ev);
+            case CloudSimTags.CLOUDLET_RETURN -> processCloudletReturn(ev);
             default -> processOtherEvent(ev);
         }
     }
 
-    private void processCloudletSubmit(SimEvent ev) {
+    private void processContainerAllocated(SimEvent ev) {
         int[] data = (int[]) ev.getData();
-        int datacenterId = data[0];
-        int cloudletId = data[1];
-        int result = data[2];
+        int hostId = data[0];
+        int containerId = data[1];
+        if (data[2] == CloudSimTags.TRUE) {
+            //container allocated
+            if (hostId == -1) {
+                Log.printLine("Error : Where is the HOST");
+            } else {
+                containerToHostMap.put(containerId, hostId);
+                Log.printLine(getName(), ": The Container #", containerId,
+                        ", is created on host #", hostId);
 
-        if (result == CloudSimTags.TRUE) {
-            //cloudlet submitted container is processing
-            Cloudlet cloudlet = scheduledCloudlets.get(cloudletId);
-            runningContainers.add(createdContainerToCloudletMap.entrySet().stream().filter(e -> e.getValue().getCloudletId() == cloudletId).map(e -> e.getKey()).findFirst().orElseThrow());
-        } else {
-            Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloudlet #", cloudletId, " execution failed");
+                sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DC_LOG);
+//                ---->process the cloudlet on created container
+                Task processCloudletTask = submittedTasks.stream().filter(t -> t.container.getId() == containerId).findFirst().orElse(null);
+                if (processCloudletTask != null) {
+                    processCloudletTask.cloudlet.setContainerId(containerId);
+                    sendNow(datacenterId, CloudSimTags.CLOUDLET_SUBMIT, processCloudletTask);
+                }
+
+            }
         }
     }
 
-    /**
-     * Allocates the container for the task and runs the task
-     *
-     * @param ev
-     */
     private void processTaskSubmit(SimEvent ev) {
-        MicroserviceCloudlet cloudlet = (MicroserviceCloudlet) ev.getData();
-        Container container = new Container(Id.pollId(Container.class), getId(), 100, 15, 0, 0, 0, "xen", new ContainerCloudletSchedulerTimeShared(), 300);
-        sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.CONTAINER_SUBMIT, List.of(container));
-        cloudlet.setContainerId(container.getId());
-        createdContainerToCloudletMap.put(container.getId(), cloudlet);
-        totalScheduledCloudlets++;
+        Task task = (Task) ev.getData();
+        submittedTasks.add(task);
+        //create container
+        sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_SUBMIT, task);
     }
 
     private void processOtherEvent(SimEvent ev) {
         if (ev == null) {
-            Log.printConcatLine(getName(), ".processOtherEvent(): ", "Error - an event is null.");
+            Log.printLine(getName(), ".processOtherEvent(): ", "Error - an event is null.");
             return;
         }
-
-        Log.printConcatLine(getName(), ".processOtherEvent(): Error - event unknown by this DatacenterBroker.");
+        Log.printLine(getName(), ".processOtherEvent(): Error - event unknown by this DatacenterBroker.");
     }
 
-    private void processContainerCreate(SimEvent ev) {
-        int[] data = (int[]) ev.getData();
-        int hostId = data[0];
-        int containerId = data[1];
-        int result = data[2];
-
-        if (result == CloudSimTags.TRUE) {
-            if (hostId == -1) {
-                Log.printConcatLine("Error : Where is the HOST");
-            } else {
-                containerToHostMap.put(containerId, hostId);
-                createdContainers.add(containerId);
-                Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": The Container #", containerId,
-                        ", is created on host #", hostId);
-                totalContainersCreated++;
-
-                sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.CONTAINER_DC_LOG);
-
-//                ---->process the cloudlet on created container
-                Cloudlet cloudletToProcess = createdContainerToCloudletMap.get(containerId);
-                scheduledCloudlets.put(cloudletToProcess.getCloudletId(), cloudletToProcess);
-                runningContainers.add(containerId);
-                sendNow(datacenterIdsList.get(0), CloudSimTags.CLOUDLET_SUBMIT, cloudletToProcess);
-            }
-        } else {
-            Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Failed Creation of Container #", containerId);
-        }
-    }
 
     private void processCloudletReturn(SimEvent ev) {
-        ContainerCloudlet cloudlet = (ContainerCloudlet) ev.getData();
-        processedCloudlets.put(cloudlet.getCloudletId(), cloudlet);
-        totalProcessedCloudlets++;
+        Task task = null;
+        if(ev.getData() instanceof Task){
+             task = (Task) ev.getData();
+        }else{
+            ContainerCloudlet cloudlet=(ContainerCloudlet) ev.getData();
+             task =   taskScheduler.getTaskForCloudlet(cloudlet);
+        }
 
-        Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloudlet ", cloudlet.getCloudletId(),
-                " returned. ", totalProcessedCloudlets, " finished Cloudlets = ", String.join(", ", processedCloudlets.keySet().stream().map(c -> c.toString()).collect(Collectors.toList())));
+
+        Log.printLine(getName(), ": Cloudlet ", task.cloudlet.getCloudletId(),
+                " returned. ", taskScheduler.getProcessedTasksCount(), " finished Cloudlets = ", String.join(", ", taskScheduler.finishedTasks.stream().map(t -> t.cloudlet.toString()).collect(Collectors.toList())));
         //deallocate the container used for cloudlet processing
-        sendNow(datacenterIdsList.get(0), ContainerCloudSimTags.CONTAINER_DESTROY, cloudlet.getContainerId());
-        sendNow(taskScheduler.getId(), ContainerCloudSimTags.USER_REQUEST_RETURN, cloudlet);
+        sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task);
+        sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_RETURN, task);
 
 
         if (this.taskScheduler.allTasksProcessed()) {
@@ -157,10 +113,10 @@ public class ContainerDatacenterBroker extends SimEntity {
             clearDatacenters();
             finishExecution();
         } else { // some cloudlets haven't finished yet
-            if (totalScheduledCloudlets > totalProcessedCloudlets) {
+            if (taskScheduler.allTasks.size() > taskScheduler.finishedTasks.size()) {
                 // all the cloudlets sent finished. It means that some bount
-                // cloudlet is waiting its container be created
-                //should never happen since the containes are allocated for specific cloudlet
+                // cloudlet is waiting its container to be created
+                //should never happen since the contains are allocated for specific cloudlet
                 clearDatacenters();
             }
 
@@ -173,41 +129,27 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
     protected void clearDatacenters() {
-//        for (int contId : createdContainers) {
-////            Log.printConcatLine(CloudSim.clock(), ": " + getName(), ": Destroying VM #", vm.getId());
-//            sendNow(datacenterId, CONTAINER_DESTROY, contId);
-//        }
-//
-//        createdContainers.clear();
+//TODO clear containers?hosts?
 
     }
 
 
     private void processResourceCharacteristics(SimEvent ev) {
         ContainerDatacenterCharacteristics characteristics = (ContainerDatacenterCharacteristics) ev.getData();
-        getDatacenterCharacteristicsList().put(characteristics.getId(), characteristics);
-
-        if (getDatacenterCharacteristicsList().size() == getDatacenterIdsList().size()) {
-            getDatacenterCharacteristicsList().clear();
-        }
+        this.datacenterCharacteristics = characteristics;
     }
 
     private void processResourceCharacteristicsRequest(SimEvent ev) {
-        setDatacenterIdsList(CloudSim.getCloudResourceList());
-        setDatacenterCharacteristicsList(new HashMap<>());
-
-
-        for (Integer datacenterId : getDatacenterIdsList()) {
-            sendNow(datacenterId, CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
-        }
+        this.datacenterId = CloudSim.getCloudResourceList().get(0);
+        sendNow(datacenterId, CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
     }
 
     @Override
     public void shutdownEntity() {
-        Log.printConcatLine(getName(), " is shutting down...");
+        Log.printLine(getName(), " is shutting down...");
     }
 
     public void printCloudletReport() {
-        taskScheduler.printCloudletList();
+        taskScheduler.printTasksReport();
     }
 }

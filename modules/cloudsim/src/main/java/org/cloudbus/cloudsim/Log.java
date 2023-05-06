@@ -8,8 +8,12 @@
 
 package org.cloudbus.cloudsim;
 
+import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.vmplus.util.TextUtil;
+
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 
 /**
  * Logger used for performing logging of the simulation process. It provides the ability to
@@ -108,6 +112,20 @@ public class Log {
             for (Object message : messages) {
                 buffer.append(message);
             }
+			printLine(buffer);
+		}
+	}
+
+	public static void printLine(Object... messages) {
+		if (!isDisabled()) {
+			buffer.setLength(0); // Clear the buffer
+			buffer.append(TextUtil.getTimeFormat().format(new Date()))
+					.append(TextUtil.toString(CloudSim.clock())).append("\t")
+					.append(TextUtil.getReadableTime(CloudSim.clock())).append("\t")
+					;
+			for (Object message : messages) {
+				buffer.append(message);
+			}
 			printLine(buffer);
 		}
 	}

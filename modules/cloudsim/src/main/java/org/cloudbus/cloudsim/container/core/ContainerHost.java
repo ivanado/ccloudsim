@@ -682,7 +682,7 @@ public class ContainerHost {
 //        }
 
         if (!getContainerScheduler().allocatePesForContainer(container, container.getCurrentRequestedMips())) {
-            Log.printConcatLine("[ContainerScheduler.ContainerCreate] Allocation of Container #", container.getId(), " to host #", getId(),
+            Log.printLine("[ContainerScheduler.ContainerCreate] Allocation of Container #", container.getId(), " to host #", getId(),
                     " failed by MIPS");
             getContainerRamProvisioner().deallocateRamForContainer(container);
             getContainerBwProvisioner().deallocateBwForContainer(container);
@@ -700,11 +700,11 @@ public class ContainerHost {
             containerDeallocate(container);
 //            Log.printConcatLine("The Container To remove is :   ", container.getId(), "Size before removing is ", getContainerList().size(), "  vm ID is: ", getId());
             getContainerList().remove(container);
-            Log.printConcatLine(CloudSim.clock(), ": ", getClass().getSimpleName(), ": hos#", getId(), " containerDestroy:......", container.getId(), " is deleted from the list");
+            Log.printLine(getClass().getSimpleName(), ": host#", getId(), " containerDestroy:......Container #", container.getId(), " is deleted ");
 
 //            Log.printConcatLine("Size after removing", getContainerList().size());
             while (getContainerList().contains(container)) {
-                Log.printConcatLine("The container", container.getId(), " is still here");
+                Log.printLine(getClass().getSimpleName(), ": The container", container.getId(), " is still here");
 //                getContainerList().remove(container);
             }
             container.setHost(null);

@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy {
-    List<Integer> freePes;
-    Map<String, Integer> containerUsedPes;
-    Map<Integer, Integer> hostFreePes;
+   public List<Integer> freePes;
+   public Map<String, Integer> containerUsedPes;
+    public Map<Integer, Integer> hostFreePes;
     private Map<String, ContainerHost> containerHostTable;
 
 
@@ -69,8 +69,7 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
         if (result) {
             containerHostTable.put(container.getUid(), containerHost);
             containerUsedPes.put(container.getUid(), requiredPes);
-            hostFreePes.put(containerHost.getId(), hostFreePes.get(container.getUid()) - requiredPes);
-            result = true;
+            hostFreePes.put(containerHost.getId(), hostFreePes.get(containerHost.getId()) - requiredPes);
         }
         return result;
     }
@@ -98,5 +97,10 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
     @Override
     public ContainerHost getContainerHost(int containerId, int userId) {
         return containerHostTable.get(Container.getUid(userId, containerId));
+    }
+
+    @Override
+    public int getFreePesForHost(int hostId) {
+        return hostFreePes.get(hostId);
     }
 }

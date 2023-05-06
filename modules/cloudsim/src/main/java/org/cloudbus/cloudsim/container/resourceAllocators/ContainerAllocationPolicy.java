@@ -119,6 +119,8 @@ public abstract class ContainerAllocationPolicy {
 		public <T extends ContainerHost> List<T> getContainerHostList() {
 			return (List<T>) this.containerHostList;
 		}
+
+		public abstract int getFreePesForHost(int hostId);
 }
 
 
