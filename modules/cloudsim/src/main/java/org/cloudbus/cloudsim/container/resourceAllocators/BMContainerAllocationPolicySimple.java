@@ -59,7 +59,7 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
     }
 
     private ContainerHost getHost(int requiredPes, List<ContainerHost> containerHostList){
-        return containerHostList.stream().filter(containerHost -> hostFreePes.get(containerHost.getId()) >= requiredPes).findFirst().orElse(null);
+        return containerHostList.stream().filter(containerHost -> containerHost.getNumberOfFreePes()>= requiredPes && hostFreePes.get(containerHost.getId()) >= requiredPes).findFirst().orElse(null);
     }
 
     @Override

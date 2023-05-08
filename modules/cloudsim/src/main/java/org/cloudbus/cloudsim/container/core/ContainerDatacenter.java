@@ -28,6 +28,8 @@ public class ContainerDatacenter extends SimEntity {
     private List<Container> activeContainers;
     private double lastProcessTime = 0;
 
+    List<ContainerCloudlet> runningCloudlets;
+
     public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy, double schedulingInterval) {
         super(name);
         this.characteristics = characteristics;
@@ -35,6 +37,7 @@ public class ContainerDatacenter extends SimEntity {
         this.schedulingInterval = schedulingInterval;
         this.allHosts = new ArrayList<>();
         this.activeContainers = new ArrayList<>();
+        this.runningCloudlets = new ArrayList<>();
 
 
         this.allHosts.addAll(this.characteristics.getHostList());
@@ -81,9 +84,24 @@ public class ContainerDatacenter extends SimEntity {
             case ContainerCloudSimTags.CONTAINER_DESTROY -> processContainerDestroy(ev);
             case CloudSimTags.CLOUDLET_SUBMIT -> processCloudletSubmit(ev);
             case ContainerCloudSimTags.CONTAINER_DC_EVENT -> updateAndCheckProcessing();
+            case CloudSimTags.CLOUDLET_CANCEL -> cancelCloudletRunningOnContainer(ev);
             default -> processOtherEvent(ev);
         }
     }
+
+    private void cancelCloudletRunningOnContainer(SimEvent ev) {
+        Container container = (Container) ev.getData();
+        ContainerCloudlet cloudletToFail = runningCloudlets.stream().filter(cl -> cl.getContainerId() == container.getId()).findAny().orElse(null);
+        try {
+            cloudletToFail.setCloudletStatus(Cloudlet.FAILED);
+//            container.getContainerCloudletScheduler().cloudletCancel(cloudletToFail.getCloudletId());
+//            cloudletToFail.
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        sendNow(getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container);
+    }
+
 
     private void updateAndCheckProcessing() {
         updateCloudletProcessing();
@@ -99,7 +117,6 @@ public class ContainerDatacenter extends SimEntity {
         } else {
             container = (Container) ev.getData();
         }
-
         containerAllocationPolicy.deallocateContainerFromHost(container);
 
         activeContainers.remove(container);
@@ -170,12 +187,12 @@ public class ContainerDatacenter extends SimEntity {
                 Log.printLine(getName(), ": Warning - Cloudlet #", cl.getCloudletId(), " owned by ", name, " is already completed/finished.");
                 Log.printLine("Therefore, it is not being executed again");
                 Log.printLine();
-
+                runningCloudlets.remove(cl);
                 sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, processCloudletTask);
 
                 return;
             }
-
+            runningCloudlets.add(cl);
             cl.setResourceParameter(getId(), getCharacteristics().getCostPerSecond(), getCharacteristics().getCostPerBw());
 
             int userId = cl.getUserId();

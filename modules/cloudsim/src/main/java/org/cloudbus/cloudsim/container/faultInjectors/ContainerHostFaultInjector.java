@@ -9,6 +9,7 @@ import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
@@ -106,8 +107,9 @@ public class ContainerHostFaultInjector extends SimEntity {
         Log.printLine(getClass().getSimpleName(),
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
                 " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
-//        sendNow(datacenter.getId(), ContainerCloudSimTags.CLOUDLET_FAIL, container);
-        sendNow(datacenter.getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container);
+        sendNow(datacenter.getId(), CloudSimTags.CLOUDLET_CANCEL, container);
+
+//        sendNow(datacenter.getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container);
     }
 
     private ContainerHost getRandomHost() {

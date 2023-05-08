@@ -150,6 +150,25 @@ public class UserRequestScheduler extends SimEntity {
                         + dft.format(task.cloudlet.getFinishTime())).append("\n");
             }
 
+
+            Log.printLine(sb.toString());
+        }
+
+        for (Task task : allTasks.stream().filter(t-> !finishedTasks.contains(t)).toList()) {
+            sb.append(indent + task.cloudlet.getCloudletId() + indent + indent);
+
+            if (task.cloudlet.getCloudletStatusString() != "Success") {
+                sb.append(task.cloudlet.getCloudletStatusString());
+                sb.append(indent + indent + task.cloudlet.getResourceId()
+                        + indent + indent
+                        + indent + indent
+                        + dft.format(task.cloudlet.getActualCPUTime()) + indent
+                        + indent + dft.format(task.cloudlet.getExecStartTime())
+                        + indent + indent
+                        + dft.format(task.cloudlet.getFinishTime())).append("\n");
+            }
+
+
             Log.printLine(sb.toString());
         }
     }
