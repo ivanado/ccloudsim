@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.container.core;
 
 
 import org.cloudbus.cloudsim.container.lists.ContainerPeList;
+import org.cloudbus.cloudsim.util.MathUtil;
 
 import java.util.List;
 
@@ -158,6 +159,7 @@ public class ContainerHostList {
 
 
     }
+
     public static <T extends ContainerHost> T getContainer(List<T> hostList, int pesNumber) {
         for (T host : hostList) {
             if (ContainerPeList.getNumberOfFreePes(host.getPeList()) >= pesNumber) {
@@ -165,6 +167,12 @@ public class ContainerHostList {
             }
         }
         return null;
+    }
+
+
+    public static ContainerHost getRandomHost(List<ContainerHost> hostList) {
+        int idx = MathUtil.randomInt(hostList.size());
+        return hostList.get(idx);
     }
 
 }

@@ -4,7 +4,7 @@ import java.util.List;
 
 public class MicroserviceCallGraph {
 
-    public static List<Microservice> get() {
+    public static List<Microservice> get(int userRequestType) {
         Microservice ms1 = new Microservice("A", 15);
         Microservice ms2 = new Microservice("B", 15);
         Microservice ms3 = new Microservice("D", 15);

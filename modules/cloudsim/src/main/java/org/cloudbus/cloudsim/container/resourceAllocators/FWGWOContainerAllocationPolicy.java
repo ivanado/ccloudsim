@@ -9,13 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy {
+public class FWGWOContainerAllocationPolicy extends ContainerAllocationPolicy {
     public List<Integer> freePes;
     public Map<String, Integer> containerUsedPes;
     private Map<String, ContainerHost> containerHostTable;
 
 
-    public BMContainerAllocationPolicySimple(List<ContainerHost> hosts) {
+    public FWGWOContainerAllocationPolicy(List<ContainerHost> hosts) {
         this.freePes = new ArrayList<>();
         this.containerUsedPes = new HashMap<>();
         this.containerHostTable = new HashMap<>();

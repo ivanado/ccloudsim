@@ -8,22 +8,29 @@ import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
+import org.cloudbus.cloudsim.container.core.DatacenterResources;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class ContainerHostFaultInjector extends SimEntity {
     @Getter
     @Setter
     private ContainerDatacenter datacenter;
-
+    private final Map<ContainerHost, List<Double>> hostFailureTimes;
+    private DatacenterResources dcResources;
     public ContainerHostFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerHostFaultInjector");
         this.setDatacenter(datacenter);
+        this.hostFailureTimes = new HashMap<>();
+        this.dcResources = DatacenterResources.get();
     }
 
     @Override
@@ -38,6 +45,10 @@ public class ContainerHostFaultInjector extends SimEntity {
         }
     }
 
+    private void scheduleHostRecovery(ContainerHost host) {
+        schedule(getId(), getNextFaultDelay(), ContainerCloudSimTags.HOST_RECOVER, host);
+    }
+
     private double getNextFaultDelay() {
         PoissonDistribution poissonDistribution = new PoissonDistribution(100);
         return poissonDistribution.sample();
@@ -48,6 +59,8 @@ public class ContainerHostFaultInjector extends SimEntity {
     public void processEvent(SimEvent ev) {
         if (ev.getTag() == ContainerCloudSimTags.HOST_FAIL) {
             generateHostFaultAndScheduleNext();
+        } else if (ev.getTag() == ContainerCloudSimTags.HOST_RECOVER) {
+            hostRecovery(ev);
         }
     }
 
@@ -67,7 +80,11 @@ public class ContainerHostFaultInjector extends SimEntity {
         }
     }
 
-    private void scheduleHostRecovery(ContainerHost host) {
+    private void hostRecovery(SimEvent event) {
+        ContainerHost host = (ContainerHost) event.getData();
+        Log.printLine(getClass().getSimpleName(), ": recovering host #", host.getId());
+        host.setFailed(false);
+
     }
 
     private void injectHostFault(ContainerHost host) {
@@ -75,7 +92,6 @@ public class ContainerHostFaultInjector extends SimEntity {
             return;
         }
         Log.printLine(getClass().getSimpleName(), ": Failing host ", host.getId(), "...");
-
 
         failHost(host);
     }
@@ -93,8 +109,11 @@ public class ContainerHostFaultInjector extends SimEntity {
                         host.getNumberOfPes(), host.getId(),
                         CloudSim.clock(), msg));
         failHostContainers(host);
-//        failedHosts.add(lastFailedHost);
         host.setFailed(true);
+        dcResources.hostFailureTimes.computeIfAbsent(host,  h -> new ArrayList<>()).add(CloudSim.clock());
+
+        dcResources.runningHosts.remove(host);
+        dcResources.failedHosts.add(host);
     }
 
 
@@ -108,8 +127,6 @@ public class ContainerHostFaultInjector extends SimEntity {
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
                 " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
         sendNow(datacenter.getId(), CloudSimTags.CLOUDLET_CANCEL, container);
-
-//        sendNow(datacenter.getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container);
     }
 
     private ContainerHost getRandomHost() {
@@ -129,4 +146,6 @@ public class ContainerHostFaultInjector extends SimEntity {
     public void shutdownEntity() {
 
     }
+
+
 }

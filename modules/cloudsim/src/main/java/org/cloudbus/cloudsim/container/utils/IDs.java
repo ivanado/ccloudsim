@@ -1,5 +1,8 @@
 package org.cloudbus.cloudsim.container.utils;
 
+import org.cloudbus.cloudsim.container.app.UserRequest;
+import org.cloudbus.cloudsim.container.app.algo.GreyWolf;
+import org.cloudbus.cloudsim.container.app.algo.Pack;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.core.*;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenterBroker;
@@ -31,6 +34,9 @@ public final class IDs {
         COUNTERS.put(ContainerHost.class, 1);
         COUNTERS.put(ContainerDatacenterBroker.class, 1);
         COUNTERS.put(ContainerPe.class, 1);
+        COUNTERS.put(UserRequest.class, 1);
+        COUNTERS.put(GreyWolf.class, 1);
+        COUNTERS.put(Pack.class, 1);
     }
 
     private IDs() {

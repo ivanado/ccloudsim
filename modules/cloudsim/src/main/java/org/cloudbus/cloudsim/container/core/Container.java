@@ -19,7 +19,9 @@ public class Container {
     /**
      * The id.
      */
-    @Setter(AccessLevel.PROTECTED) @Getter private int id;
+    @Setter(AccessLevel.PROTECTED)
+    @Getter
+    private int id;
 
     /**
      * The user id.
@@ -31,7 +33,9 @@ public class Container {
     /**
      * The uid.
      */
-    @Getter @Setter private String uid;
+    @Getter
+    @Setter
+    private String uid;
 
     /**
      * The size.
@@ -57,12 +61,16 @@ public class Container {
     /**
      * The number of PEs.
      */
-    @Getter @Setter private int numberOfPes;
+    @Getter
+    @Setter
+    private int numberOfPes;
 
     /**
      * The ram.
      */
-    @Getter @Setter private float ram;
+    @Getter
+    @Setter
+    private float ram;
 
     /**
      * The bw.
@@ -162,8 +170,45 @@ public class Container {
     @Setter
     private ContainerHost host;
 
+    @Getter
+    @Setter
+    private int microserviceId;
+
+    public Container(
+            int id,
+            int microserviceId,
+            int userId,
+            double mips,
+            int numberOfPes,
+            int ram,
+            long bw,
+            long size,
+            String containerManager,
+            ContainerCloudletScheduler containerCloudletScheduler, double schedulingInterval) {
+        setWorkloadMips(mips);
+        setId(id);
+        setUserId(userId);
+        setUid(getUid(userId, id));
+        setMips(mips);
+        setNumberOfPes(numberOfPes);
+        setRam(ram);
+        setBw(bw);
+        setSize(size);
+        setContainerManager(containerManager);
+        setContainerCloudletScheduler(containerCloudletScheduler);
+        setInMigration(false);
+        setBeingInstantiated(true);
+        setCurrentAllocatedBw(0);
+        setCurrentAllocatedMips(null);
+        setCurrentAllocatedRam(0);
+        setCurrentAllocatedSize(0);
+        setSchedulingInterval(schedulingInterval);
+        setMicroserviceId(microserviceId);
+    }
+
     /**
      * Creates a new Container object.
+     *
      * @param id
      * @param userId
      * @param mips
@@ -291,8 +336,8 @@ public class Container {
     /**
      * Generate unique string identificator of the container.
      *
-     * @param userId the user id
-     * @param containerId   the container id
+     * @param userId      the user id
+     * @param containerId the container id
      * @return string uid
      */
     public static String getUid(int userId, int containerId) {
@@ -454,4 +499,21 @@ public class Container {
     }
 
 
+    public boolean isOnSameHost(Container other) {
+        return this.getHost() != null && this.getHost().getId() == other.getHost().getId();
+    }
+    public boolean isOnSameHost(ContainerHost other) {
+        return this.getHost() != null && this.getHost().getId() == other.getId();
+    }
+
+    public int getNetworkDistance(Container other) {
+        if(other.getHost() == null){
+
+        }
+        return isOnSameHost(other) ? 0 : 1;
+    }
+
+    public int getNetworkDistance(ContainerHost host) {
+        return isOnSameHost(host) ? 0 : 1;
+    }
 }

@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.InfoPacket;
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.container.app.Microservice;
 import org.cloudbus.cloudsim.container.app.Task;
 import org.cloudbus.cloudsim.container.resourceAllocators.ContainerAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -14,6 +15,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ContainerDatacenter extends SimEntity {
     private final ContainerAllocationPolicy containerAllocationPolicy;
@@ -29,6 +31,7 @@ public class ContainerDatacenter extends SimEntity {
     private double lastProcessTime = 0;
 
     List<ContainerCloudlet> runningCloudlets;
+    private List<Container> failedContainers;
 
     public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy, double schedulingInterval) {
         super(name);
@@ -38,6 +41,7 @@ public class ContainerDatacenter extends SimEntity {
         this.allHosts = new ArrayList<>();
         this.activeContainers = new ArrayList<>();
         this.runningCloudlets = new ArrayList<>();
+        this.failedContainers = new ArrayList<>();
 
 
         this.allHosts.addAll(this.characteristics.getHostList());
@@ -94,6 +98,7 @@ public class ContainerDatacenter extends SimEntity {
         ContainerCloudlet cloudletToFail = runningCloudlets.stream().filter(cl -> cl.getContainerId() == container.getId()).findAny().orElse(null);
         try {
             cloudletToFail.setCloudletStatus(Cloudlet.FAILED);
+            failedContainers.add(container);
 //            container.getContainerCloudletScheduler().cloudletCancel(cloudletToFail.getCloudletId());
 //            cloudletToFail.
         } catch (Exception e) {
@@ -120,13 +125,14 @@ public class ContainerDatacenter extends SimEntity {
         containerAllocationPolicy.deallocateContainerFromHost(container);
 
         activeContainers.remove(container);
-
+        printResourcesStatus();
     }
 
     private void processContainerSubmit(SimEvent ev, boolean ack) {
 
         Task task = (Task) ev.getData();
 
+//calculate values
 
         boolean result = containerAllocationPolicy.allocateHostForContainer(task.container, this.allHosts);
         if (ack) {
@@ -294,5 +300,31 @@ public class ContainerDatacenter extends SimEntity {
 
     public List<ContainerHost> getRunningHosts() {
         return this.allHosts.stream().filter(h -> !h.isFailed()).toList();
+    }
+
+    public void removeRunningContainer(Container containerToFail) {
+        getContainerList().remove(containerToFail);
+    }
+
+    public int getContainerReplicaCount(Microservice ms) {
+        return (int) this.activeContainers.stream().filter(c -> {
+            return c.getMicroserviceId() == ms.getId();
+        }).count();
+    }
+    public int getContainerReplicaCount(int msId) {
+        return (int) this.activeContainers.stream().filter(c -> {
+            return c.getMicroserviceId() == msId;
+        }).count();
+    }
+    public List<ContainerHost> getHostsWithFreePes(int requiredPes){
+        return getRunningHosts().stream().filter(host->{return host.getNumberOfFreePes() >= requiredPes;}).collect(Collectors.toList());
+    }
+
+    public List<ContainerHost> getHostsRunningMicroservice(int msId) {
+        return getRunningHosts().stream().filter(host->{return host.hasContainer(msId);}).collect(Collectors.toList());
+    }
+
+    public List<Container> getContainersRunningMicroservice(int msId) {
+        return getContainerList().stream().filter(container -> {return container.getMicroserviceId() == msId;}).toList();
     }
 }

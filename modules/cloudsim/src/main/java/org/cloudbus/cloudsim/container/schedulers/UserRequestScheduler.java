@@ -132,45 +132,29 @@ public class UserRequestScheduler extends SimEntity {
         sb.append("\n");
         sb.append("========== OUTPUT ==========").append("\n");
         sb.append("Cloudlet ID" + indent + "STATUS" + indent
-                + "Data center ID" + indent + "Time" + indent
+                + "Data center ID" + indent + "ContainerId" + indent + "Time" + indent
                 + "Start Time" + indent + "Finish Time\n");
 
         DecimalFormat dft = new DecimalFormat("###.##");
-        for (Task task : finishedTasks) {
+
+
+        for (Task task : allTasks) {
             sb.append(indent + task.cloudlet.getCloudletId() + indent + indent);
 
-            if (task.cloudlet.getCloudletStatusString() == "Success") {
-                sb.append("SUCCESS");
-                sb.append(indent + indent + task.cloudlet.getResourceId()
-                        + indent + indent
-                        + indent + indent
-                        + dft.format(task.cloudlet.getActualCPUTime()) + indent
-                        + indent + dft.format(task.cloudlet.getExecStartTime())
-                        + indent + indent
-                        + dft.format(task.cloudlet.getFinishTime())).append("\n");
-            }
 
-
-            Log.printLine(sb.toString());
-        }
-
-        for (Task task : allTasks.stream().filter(t-> !finishedTasks.contains(t)).toList()) {
-            sb.append(indent + task.cloudlet.getCloudletId() + indent + indent);
-
-            if (task.cloudlet.getCloudletStatusString() != "Success") {
                 sb.append(task.cloudlet.getCloudletStatusString());
                 sb.append(indent + indent + task.cloudlet.getResourceId()
-                        + indent + indent
+                        + indent + indent + task.container.getId()
                         + indent + indent
                         + dft.format(task.cloudlet.getActualCPUTime()) + indent
                         + indent + dft.format(task.cloudlet.getExecStartTime())
                         + indent + indent
                         + dft.format(task.cloudlet.getFinishTime())).append("\n");
-            }
 
 
-            Log.printLine(sb.toString());
-        }
+
+
+        } Log.printLine(sb.toString());
     }
 
     public int getProcessedTasksCount() {

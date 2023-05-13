@@ -14,7 +14,15 @@ public class ContainerCloudlet extends Cloudlet {
     @Setter
     @Getter
     public int containerId = -1;
+    @Setter
+    @Getter
+    public int microserviceId = -1;
 
+    public ContainerCloudlet(int cloudletId, int microserviceId, long cloudletLength, int pesNumber, long cloudletFileSize, long cloudletOutputSize, UtilizationModel utilizationModelCpu, UtilizationModel utilizationModelRam, UtilizationModel utilizationModelBw) {
+
+        super(cloudletId, cloudletLength, pesNumber, cloudletFileSize, cloudletOutputSize, utilizationModelCpu, utilizationModelRam, utilizationModelBw);
+        this.microserviceId = microserviceId;
+    }
 
     public ContainerCloudlet(int cloudletId, long cloudletLength, int pesNumber, long cloudletFileSize, long cloudletOutputSize, UtilizationModel utilizationModelCpu, UtilizationModel utilizationModelRam, UtilizationModel utilizationModelBw) {
 

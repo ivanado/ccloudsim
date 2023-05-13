@@ -15,7 +15,7 @@ public class ContainerPeList {
     /**
      * Gets MIPS Rating for a specified Pe ID.
      *
-     * @param id the Pe ID
+     * @param id     the Pe ID
      * @param peList the pe list
      * @return the MIPS rating if exists, otherwise returns -1
      * @pre id >= 0
@@ -28,7 +28,7 @@ public class ContainerPeList {
     /**
      * Gets MIPS Rating for a specified Pe ID.
      *
-     * @param id the Pe ID
+     * @param id     the Pe ID
      * @param peList the pe list
      * @return the MIPS rating if exists, otherwise returns -1
      * @pre id >= 0
@@ -72,7 +72,7 @@ public class ContainerPeList {
      * Gets the max utilization among by all PEs allocated to the VM.
      *
      * @param container the container
-     * @param peList the pe list
+     * @param peList    the pe list
      * @return the utilization
      */
     public static <T extends ContainerPe> double getMaxUtilizationAmongVmsPes(List<T> peList, Container container) {
@@ -117,10 +117,10 @@ public class ContainerPeList {
      * Sets the Pe status.
      *
      * @param status Pe status, either <tt>Pe.FREE</tt> or <tt>Pe.BUSY</tt>
-     * @param id the id
+     * @param id     the id
      * @param peList the pe list
      * @return <tt>true</tt> if the Pe status has been changed, <tt>false</tt> otherwise (Pe id might
-     *         not be exist)
+     * not be exist)
      * @pre peID >= 0
      * @post $none
      */
@@ -149,10 +149,9 @@ public class ContainerPeList {
      * Sets the status of PEs of this machine to FAILED. NOTE: <tt>resName</tt> and
      * <tt>machineID</tt> are used for debugging purposes, which is <b>ON</b> by default. Use
      *
-     *
      * @param resName the name of the resource
-     * @param hostId the id of this machine
-     * @param failed the new value for the "failed" parameter
+     * @param hostId  the id of this machine
+     * @param failed  the new value for the "failed" parameter
      */
     public static <T extends ContainerPe> void setStatusFailed(
             List<T> peList,
@@ -176,5 +175,17 @@ public class ContainerPeList {
         // a loop to set the status of all the PEs in this machine
         peList.forEach(pe -> pe.setStatus(failed ? ContainerPe.FAILED : ContainerPe.FREE));
     }
+
+    public static ContainerPe getBusyPe(List<ContainerPe> peList) {
+        return peList.stream().filter(pe -> pe.getStatus() == ContainerPe.BUSY).findFirst().orElse(null);
+    }
+
+    public static <T extends ContainerPe> void freeBusyPes(List<T> peList, int noPesToFree) {
+        peList.stream().filter(pe -> pe.getStatus() == ContainerPe.BUSY).limit(noPesToFree).forEach(pe -> pe.setStatusFree());
+    }
+    public static <T extends ContainerPe> void allocateFreePes(List<T> peList, int noPesToAllocate) {
+        peList.stream().filter(pe -> pe.getStatus() == ContainerPe.FREE).limit(noPesToAllocate).forEach(pe -> pe.setStatusBusy());
+    }
+
 
 }

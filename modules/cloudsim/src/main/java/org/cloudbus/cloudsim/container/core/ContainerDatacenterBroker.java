@@ -21,7 +21,7 @@ public class ContainerDatacenterBroker extends SimEntity {
     public Integer datacenterId;
     public ContainerDatacenterCharacteristics datacenterCharacteristics;
 
-    public List<Task> submittedTasks;
+    public List<Task> runningTasks;
 
     public UserRequestScheduler taskScheduler;
 
@@ -29,7 +29,7 @@ public class ContainerDatacenterBroker extends SimEntity {
         super(name);
         this.containerToHostMap = new HashMap<>();
         this.taskScheduler = new UserRequestScheduler("BM-TaskScheduler", getId());
-        this.submittedTasks = new ArrayList<>();
+        this.runningTasks = new ArrayList<>();
     }
 
     @Override
@@ -65,7 +65,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
                 sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DC_LOG);
 //                ---->process the cloudlet on created container
-                Task processCloudletTask = submittedTasks.stream().filter(t -> t.container.getId() == containerId).findFirst().orElse(null);
+                Task processCloudletTask = runningTasks.stream().filter(t -> t.container.getId() == containerId).findFirst().orElse(null);
                 if (processCloudletTask != null) {
                     processCloudletTask.cloudlet.setContainerId(containerId);
                     sendNow(datacenterId, CloudSimTags.CLOUDLET_SUBMIT, processCloudletTask);
@@ -77,8 +77,8 @@ public class ContainerDatacenterBroker extends SimEntity {
 
     private void processTaskSubmit(SimEvent ev) {
         Task task = (Task) ev.getData();
-        submittedTasks.add(task);
-        //create container
+        runningTasks.add(task);
+
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_SUBMIT, task);
     }
 
@@ -103,9 +103,11 @@ public class ContainerDatacenterBroker extends SimEntity {
 
         Log.printLine(getName(), ": Cloudlet ", task.cloudlet.getCloudletId(),
                 " returned. ", taskScheduler.getProcessedTasksCount(), " finished Cloudlets = ", taskScheduler.finishedTasks.stream().map(t -> String.valueOf(t.cloudlet.getCloudletId())).collect(Collectors.joining(", ")));
+
         //deallocate the container used for cloudlet processing
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task);
         sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_RETURN, task);
+        runningTasks.remove(task);
 
 
         if (this.taskScheduler.allTasksProcessed()) {
@@ -150,5 +152,9 @@ public class ContainerDatacenterBroker extends SimEntity {
 
     public void printCloudletReport() {
         taskScheduler.printTasksReport();
+    }
+
+    public void calculateValues(){
+
     }
 }

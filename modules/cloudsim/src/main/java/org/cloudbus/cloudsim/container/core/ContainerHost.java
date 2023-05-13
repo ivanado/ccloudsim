@@ -2,16 +2,17 @@ package org.cloudbus.cloudsim.container.core;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerBwProvisioner;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerRamProvisioner;
 import org.cloudbus.cloudsim.container.lists.ContainerPeList;
 import org.cloudbus.cloudsim.container.schedulers.ContainerScheduler;
-import org.cloudbus.cloudsim.*;
-import org.cloudbus.cloudsim.core.CloudSim;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by sareh on 10/07/15.
@@ -572,6 +573,12 @@ public class ContainerHost {
         return (List<T>) containersList;
     }
 
+    public boolean hasContainer(int microserviceId) {
+        return containersList.stream().anyMatch(container -> {
+            return container.getMicroserviceId() == microserviceId;
+        });
+    }
+
     /**
      * Sets the storage.
      *
@@ -743,6 +750,25 @@ public class ContainerHost {
                 .filter(container -> container.getId() == containerId && container.getUserId() == userId)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public Set<Integer> getRunningMicroserviceIds() {
+        return getContainerList().stream().map(container -> container.getMicroserviceId()).collect(Collectors.toSet());
+    }
+
+
+    public double getCapacity(int pesToAllocate) {
+        return pesToAllocate < getNumberOfPes()
+                ? (double) (getNumberOfFreePes() - pesToAllocate) / getNumberOfPes()
+                : 0;
+    }
+
+    public double getCapacity() {
+        return getCapacity(0);
+    }
+
+    public boolean is(ContainerHost other) {
+        return this.id == other.id;
     }
 }
 

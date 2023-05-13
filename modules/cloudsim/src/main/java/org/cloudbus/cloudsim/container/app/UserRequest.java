@@ -1,48 +1,39 @@
 package org.cloudbus.cloudsim.container.app;
 
 
+import org.cloudbus.cloudsim.container.app.algo.UserRequestType;
+import org.cloudbus.cloudsim.container.utils.IDs;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserRequest {
-
+    public int id;
     public List<Task> tasks;
-    public List<Microservice> msCallGraph;
+    public UserRequestType type;
 
     public int brokerId;
 
     public UserRequest(int brokerId) {
+        this.id = IDs.pollId(UserRequest.class);
+        this.type = UserRequestType.getUserRequestTypeOne();
         this.tasks = new ArrayList<>();
-        this.msCallGraph = MicroserviceCallGraph.get();
         this.brokerId = brokerId;
         initializeTasks();
 
     }
 
     private void initializeTasks() {
-        tasks = msCallGraph.stream().map(ms -> new Task(ms, this.brokerId)).toList();
-        msCallGraph.forEach(ms -> {
-            Task task = tasks.stream().filter(t -> t.microservice == ms).findFirst().orElse(null);
-            Task provider = null;
-            Task consumer = null;
-            if (ms.hasProvider()) {
-                provider = tasks.stream().filter(t -> t.microservice.getId() == ms.getProvider().getId()).findFirst().orElse(null);
-            }
-            if (ms.hasConsumer()) {
-                consumer = tasks.stream().filter(t -> t.microservice.getId() == ms.getConsumer().getId()).findFirst().orElse(null);
-
-            }
-            if (task != null) task.set(provider, consumer);
-        });
+        this.tasks = this.type.msCallGraph.stream().map(ms-> new Task(ms, this.brokerId, this)).toList();
     }
 
     public List<Task> getTasks() {
         return tasks;
     }
 
-    public List<Task> getTasks(boolean independent) {
+    public List<Task> getTasks(boolean noProvider) {
         return tasks.stream().filter(task -> {
-            if (independent) {
+            if (noProvider) {
                 return task.microservice.getProvider() == null;
             } else {
                 return task.microservice.getProvider() != null;
@@ -50,4 +41,5 @@ public class UserRequest {
         }).toList();
 
     }
+
 }

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.cloudbus.cloudsim.container.utils.IDs;
 
+import static org.cloudbus.cloudsim.container.core.DatacenterResources.MAX_HOST_PES;
+
 public class Microservice {
 
     @Getter
@@ -34,13 +36,24 @@ public class Microservice {
 
     @Override
     public String toString() {
-        return "ms-" + getId();
+        return name;
     }
 
     public boolean hasProvider() {
         return provider != null;
     }
+
     public boolean hasConsumer() {
         return consumer != null;
+    }
+
+
+    public double getResourceConsumption() {
+        return (double) requiredPes / MAX_HOST_PES;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this.id == ((Microservice) obj).getId();
     }
 }
