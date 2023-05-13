@@ -1,18 +1,13 @@
-package org.cloudbus.cloudsim.container.app.algo;
+package org.cloudbus.cloudsim.container.app.model.algo
 
-import org.cloudbus.cloudsim.container.app.Task;
-import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.util.MathUtil;
+import org.cloudbus.cloudsim.container.app.model.Task
+import org.cloudbus.cloudsim.container.core.ContainerHost
+import org.cloudbus.cloudsim.util.MathUtil
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class FWAGWO {
+class FwaGwo {
     List<Firework> fireworks;
-    Map<Firework, Double> fireworkFitness;
-    double bestFitness;
+    Map<Firework, Double> fireworkFitness
+    double bestFitness
     double worstFitness;
 
     double maxSparks;
@@ -22,7 +17,7 @@ public class FWAGWO {
     List<Pack> packs;
     int wolvesPerPack = 4;
 
-    public FWAGWO(int numberOfPacks, List<ContainerHost> allHosts) {
+    FwaGwo(int numberOfPacks, List<ContainerHost> allHosts) {
         this.maxAmplitude = 0;
         initFireworks(numberOfPacks, allHosts);
         initPacks(numberOfPacks, wolvesPerPack, allHosts);
@@ -49,7 +44,7 @@ public class FWAGWO {
         }
     }
 
-    public void run(Task task) {
+    void run(Task task) {
         findBestSparks(task);
         packs.forEach(pack -> {
             pack.rankAndPositionWolves();

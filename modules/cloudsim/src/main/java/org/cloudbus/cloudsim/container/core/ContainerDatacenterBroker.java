@@ -1,7 +1,7 @@
 package org.cloudbus.cloudsim.container.core;
 
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.Task;
+import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.schedulers.UserRequestScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
@@ -65,9 +65,9 @@ public class ContainerDatacenterBroker extends SimEntity {
 
                 sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DC_LOG);
 //                ---->process the cloudlet on created container
-                Task processCloudletTask = runningTasks.stream().filter(t -> t.container.getId() == containerId).findFirst().orElse(null);
+                Task processCloudletTask = runningTasks.stream().filter(t -> t.getContainer().getId() == containerId).findFirst().orElse(null);
                 if (processCloudletTask != null) {
-                    processCloudletTask.cloudlet.setContainerId(containerId);
+                    processCloudletTask.getCloudlet().setContainerId(containerId);
                     sendNow(datacenterId, CloudSimTags.CLOUDLET_SUBMIT, processCloudletTask);
                 }
 
@@ -93,16 +93,16 @@ public class ContainerDatacenterBroker extends SimEntity {
 
     private void processCloudletReturn(SimEvent ev) {
         Task task;
-        if(ev.getData() instanceof Task){
-             task = (Task) ev.getData();
-        }else{
-            ContainerCloudlet cloudlet=(ContainerCloudlet) ev.getData();
-             task =   taskScheduler.getTaskForCloudlet(cloudlet);
+        if (ev.getData() instanceof Task) {
+            task = (Task) ev.getData();
+        } else {
+            ContainerCloudlet cloudlet = (ContainerCloudlet) ev.getData();
+            task = taskScheduler.getTaskForCloudlet(cloudlet);
         }
 
 
-        Log.printLine(getName(), ": Cloudlet ", task.cloudlet.getCloudletId(),
-                " returned. ", taskScheduler.getProcessedTasksCount(), " finished Cloudlets = ", taskScheduler.finishedTasks.stream().map(t -> String.valueOf(t.cloudlet.getCloudletId())).collect(Collectors.joining(", ")));
+        Log.printLine(getName(), ": Cloudlet #", task.getCloudlet().getCloudletId(),
+                " returned. "," finished Cloudlets = ", taskScheduler.finishedTasks.stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")));
 
         //deallocate the container used for cloudlet processing
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task);
@@ -141,7 +141,9 @@ public class ContainerDatacenterBroker extends SimEntity {
     }
 
     private void processResourceCharacteristicsRequest() {
-        this.datacenterId = CloudSim.getCloudResourceList().get(0);
+        this.datacenterId = CloudSim.getCloudResourceList() != null && CloudSim.getCloudResourceList().size() > 0
+                ? CloudSim.getCloudResourceList().get(0)
+                : null;
         sendNow(datacenterId, CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
     }
 
@@ -154,7 +156,4 @@ public class ContainerDatacenterBroker extends SimEntity {
         taskScheduler.printTasksReport();
     }
 
-    public void calculateValues(){
-
-    }
 }

@@ -1,8 +1,8 @@
 package org.cloudbus.cloudsim.container.core;
 
-import org.cloudbus.cloudsim.container.app.Microservice;
-import org.cloudbus.cloudsim.container.app.Task;
-import org.cloudbus.cloudsim.container.app.UserRequest;
+import org.cloudbus.cloudsim.container.app.model.Microservice;
+import org.cloudbus.cloudsim.container.app.model.Task;
+import org.cloudbus.cloudsim.container.app.model.UserRequest;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerBwProvisionerSimple;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPeProvisionerSimple;
@@ -71,13 +71,13 @@ public class DatacenterResources {
     }
 
     public void addUserRequest(UserRequest userRequest) {
-        userRequestsByType.computeIfAbsent(userRequest.type.id, ur -> new ArrayList<>()).add(userRequest);
+        userRequestsByType.computeIfAbsent(userRequest.getType().getId(), ur -> new ArrayList<>()).add(userRequest);
     }
 
 
     public double getContainerResourceConsumption(int msId, int userRequestType) {
         double noOfUserRequests = (double) userRequestsByType.get(userRequestType).size();
-        int userRequestMsCount = userRequestsByType.get(userRequestType).stream().findFirst().get().type.getMicroserviceCount();
+        int userRequestMsCount = userRequestsByType.get(userRequestType).stream().findFirst().get().getType().getMicroserviceCount();
         List msContainers = microserviceRunningContainers.get(msId);
         int containerReplicaCount = msContainers == null ? 0 : msContainers.size();
         Microservice ms = getById(msId);
@@ -86,12 +86,12 @@ public class DatacenterResources {
     }
 
     public double getContainerResourceConsumption(Task taskToSchedule) {
-        int msId = taskToSchedule.microservice.getId();
-        int userRequestType = taskToSchedule.userRequest.type.id;
+        int msId = taskToSchedule.getMicroservice().getId();
+        int userRequestType = taskToSchedule.getUserRequest().getType().getId();
         double noOfUserRequests = userRequestsByType.get(userRequestType).size();
-        int userRequestMsCount = userRequestsByType.get(userRequestType).stream().findFirst().get().type.getMicroserviceCount();
+        int userRequestMsCount = userRequestsByType.get(userRequestType).stream().findFirst().get().getType().getMicroserviceCount();
         List<Container> msContainers = new ArrayList<>(microserviceRunningContainers.get(msId));
-        msContainers.add(taskToSchedule.container);
+        msContainers.add(taskToSchedule.getContainer());
         int containerReplicaCount = msContainers == null ? 0 : msContainers.size();
         Microservice ms = getById(msId);
 
@@ -126,12 +126,12 @@ public class DatacenterResources {
     public static void main(String[] args) {
 Task t = new Task(new Microservice("m",11), 1, new UserRequest(1));
 
-        Container tmpContainer = t.container;
+        Container tmpContainer = t.getContainer();
 //        System.out.println(t.container.getHost().getId());
         List<ContainerPe> peList=Arrays.asList(new ContainerPe(IDs.pollId(ContainerPe.class), new ContainerPeProvisionerSimple(1000)));
         tmpContainer.setHost(new ContainerHost(666, new ContainerRamProvisionerSimple(100), new ContainerBwProvisionerSimple(100),0, peList, new ContainerSchedulerTimeShared(peList)));
 
-        System.out.println(t.container.getHost().getId());
+        System.out.println(t.getContainer().getHost().getId());
         System.out.println(tmpContainer.getHost().getId());
 
     }

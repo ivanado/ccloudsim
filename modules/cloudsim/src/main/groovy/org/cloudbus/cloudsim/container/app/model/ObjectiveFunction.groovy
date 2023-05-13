@@ -1,24 +1,17 @@
-package org.cloudbus.cloudsim.container.app;
-
-import org.cloudbus.cloudsim.container.core.Container;
-import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.container.core.DatacenterResources;
-import org.cloudbus.cloudsim.util.MathUtil;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.cloudbus.cloudsim.container.core.DatacenterResources.MS_RESOURCE_THRESHOLD;
+package org.cloudbus.cloudsim.container.app.model
 
 
-public class ObjectiveFunction {
+import org.cloudbus.cloudsim.container.core.Container
+import org.cloudbus.cloudsim.container.core.ContainerHost
+import org.cloudbus.cloudsim.container.core.DatacenterResources
+import org.cloudbus.cloudsim.util.MathUtil
 
+import static org.cloudbus.cloudsim.container.core.DatacenterResources.MS_RESOURCE_THRESHOLD
 
+class ObjectiveFunction {
     private static DatacenterResources dcResources = DatacenterResources.get();
 
-    public static double calculateThresholdDistance(Task taskToSchedule) {
-        int sum = 0;
+    static double calculateThresholdDistance(Task taskToSchedule) {
         Set<Microservice> runningMicroservices = new HashSet<>(dcResources.runningMicroservices);
         runningMicroservices.add(taskToSchedule.microservice);
 
@@ -30,14 +23,14 @@ public class ObjectiveFunction {
 
     }
 
-    private  static double physicalMachineUsage(ContainerHost host, int userRequestType) {
+    private static double physicalMachineUsage(ContainerHost host, int userRequestType) {
         Set<Integer> msIds = host.getRunningMicroserviceIds();
         double containersResourceConsumption = MathUtil.sum(msIds.stream().map(msId -> dcResources.getContainerResourceConsumption(msId, userRequestType)).toList());
         return containersResourceConsumption / host.getCapacity();
 
     }
 
-    private  static double physicalMachineUsage(ContainerHost allocationCandidateHost, Task taskToSchedule) {
+    private static double physicalMachineUsage(ContainerHost allocationCandidateHost, Task taskToSchedule) {
 
 
         Set<Integer> msIds = new HashSet<>(allocationCandidateHost.getRunningMicroserviceIds());
@@ -47,11 +40,11 @@ public class ObjectiveFunction {
                 msIds.stream().mapToDouble(msId ->
                         dcResources.getContainerResourceConsumption(msId, taskToSchedule.userRequest.type.id)
                 ).sum()
-                        + dcResources.getContainerResourceConsumption(taskToSchedule);
+        +dcResources.getContainerResourceConsumption(taskToSchedule);
         return physicalMachineContainersResourcesUsage / allocationCandidateHost.getCapacity(taskToSchedule.container.getNumberOfPes());
     }
 
-    public static double calculateBalancedClusterUse(Task taskToSchedule, ContainerHost allocationCandidateHost) {
+    static double calculateBalancedClusterUse(Task taskToSchedule, ContainerHost allocationCandidateHost) {
 
         List<Double> physicalMachinesUsage = dcResources.runningHosts.stream().map(host ->
                 host.is(allocationCandidateHost)
@@ -63,7 +56,7 @@ public class ObjectiveFunction {
 
     }
 
-    public static double calculateSystemFailureRate(Task taskToSchedule) {
+    static double calculateSystemFailureRate(Task taskToSchedule) {
 
         Set<Microservice> allMicroservices = new HashSet<>(dcResources.runningMicroservices);
         allMicroservices.add(taskToSchedule.microservice);
@@ -71,14 +64,14 @@ public class ObjectiveFunction {
         return allMicroservices.stream().mapToDouble(ms -> calculateServiceFailure(ms)).sum();
     }
 
-    public static double calculateServiceFailure(Microservice microservice) {
+    static double calculateServiceFailure(Microservice microservice) {
         List<ContainerHost> hosts = dcResources.runningMicroservicesHosts.get(microservice.getId());
         return hosts.stream().mapToDouble(h ->
                 dcResources.getHostFailureRate(h) + dcResources.getMicroserviceContainerFailureRate(microservice.getId())
         ).reduce(1, (a, b) -> a * b);
     }
 
-    public  static double calculateTotalNetworkDistance(Task taskToSchedule, ContainerHost allocationCandidateHost) {
+    static double calculateTotalNetworkDistance(Task taskToSchedule, ContainerHost allocationCandidateHost) {
 
         Set<Microservice> runningMicroservices = new HashSet<>(dcResources.runningMicroservices);
         runningMicroservices.add(taskToSchedule.microservice);
@@ -121,7 +114,7 @@ public class ObjectiveFunction {
     }
 
 
-    public static double calculate(Task taskToSchedule, ContainerHost allocationCandidateHost) {
+    static double calculate(Task taskToSchedule, ContainerHost allocationCandidateHost) {
 
         double td = calculateThresholdDistance(taskToSchedule);
         double cb = calculateBalancedClusterUse(taskToSchedule, allocationCandidateHost);

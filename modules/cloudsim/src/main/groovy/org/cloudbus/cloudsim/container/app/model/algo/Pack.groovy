@@ -1,24 +1,22 @@
-package org.cloudbus.cloudsim.container.app.algo;
+package org.cloudbus.cloudsim.container.app.model.algo
 
-import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.container.utils.IDs;
+import org.cloudbus.cloudsim.container.core.ContainerHost
+import org.cloudbus.cloudsim.container.utils.IDs
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Pack {
-    private Firework firework;
+class Pack {
+    Firework firework;
     int id;
-    public int noOfWolves;
-    public List<GreyWolf> greyWolves;
-    public List<ContainerHost> hostsToSearch; //subset of all hosts
+    int noOfWolves;
+    List<GreyWolf> greyWolves;
+    List<ContainerHost> hostsToSearch; //subset of all hosts
     private int initialFireworkLocationIdx;
 
 
     private double distance;
-    public Pack(int noOfWolves, Firework firework) {
+
+    Pack(int noOfWolves, Firework firework) {
         this.id = IDs.pollId(Pack.class);
-        this.distance=-1;
+        this.distance = -1;
         this.noOfWolves = noOfWolves;
         this.hostsToSearch = firework.hostsToSearch;
         this.firework = firework;
@@ -30,7 +28,7 @@ public class Pack {
     }
 
 
-    public void rankAndPositionWolves() {
+    void rankAndPositionWolves() {
         List<Spark> bestSparks = firework.getBestSparks(noOfWolves);
         for (int i = 0; i < this.greyWolves.size(); i++) {
             Spark spark = bestSparks.get(i);
@@ -41,9 +39,12 @@ public class Pack {
         }
     }
 
-    public void updatePositions() {
+    void updatePositions() {
 
     }
 
+}
 
+enum Rank {
+    ALPHA(1), BETA(2), DELTA(3), OMEGA(4)
 }

@@ -165,6 +165,13 @@ public class MathUtil {
         return mad;
     }
 
+    public static double max(double a, double b) {
+        return a > b ? a : b;
+    }
+    public static double min(double a, double b) {
+        return a < b ? a : b;
+    }
+
     /**
      * Gets the Interquartile Range (IQR) from an array of numbers.
      *

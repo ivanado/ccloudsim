@@ -1,8 +1,8 @@
 package org.cloudbus.cloudsim.container.schedulers;
 
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.Task;
-import org.cloudbus.cloudsim.container.app.UserRequest;
+import org.cloudbus.cloudsim.container.app.model.Task;
+import org.cloudbus.cloudsim.container.app.model.UserRequest;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerCloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -82,17 +82,28 @@ public class UserRequestScheduler extends SimEntity {
         waitingTasks.addAll(testRequest.getTasks(false));
 
         submitTasks();
-        if(allTasks.size()<10){
+        if (allTasks.size() < 10) {
             scheduleNextUserRequest();
         }
-
-
     }
 
     private void submitTasks() {
         while (!taskQueue.isEmpty()) {
-            sendNow(brokerId, ContainerCloudSimTags.TASK_SUBMIT, taskQueue.poll());
+            Task task = taskQueue.poll();
+            Log.printLine(getName(), ": Submitting task with container #", task.getContainer().getId(), " and cloudlet #", task.getCloudlet().getCloudletId());
+            sendNow(brokerId, ContainerCloudSimTags.TASK_SUBMIT, task);
         }
+        printQueues();
+    }
+
+    private void printQueues() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n=======SCHEDULER QUEUES=======").append("\n");
+        sb.append("All tasks list: ").append(String.join(",", allTasks.stream().map(t -> "container #" + t.getContainer().getId() + " cloudlet #" + t.getCloudlet().getCloudletId()).toList())).append("\n");
+        sb.append("Waiting tasks queue: ").append(String.join(",", waitingTasks.stream().map(t -> "container #" + t.getContainer().getId() + " cloudlet #" + t.getCloudlet().getCloudletId()).toList())).append("\n");
+        sb.append("Tasks queue: ").append(String.join(",", taskQueue.stream().map(t -> "container #" + t.getContainer().getId() + " cloudlet #" + t.getCloudlet().getCloudletId()).toList())).append("\n");
+        sb.append("=============================").append("\n");
+        Log.print(sb.toString());
     }
 
     private void processTaskFinished(SimEvent ev) {
@@ -139,22 +150,21 @@ public class UserRequestScheduler extends SimEntity {
 
 
         for (Task task : allTasks) {
-            sb.append(indent + task.cloudlet.getCloudletId() + indent + indent);
+            sb.append(indent + task.getCloudlet().getCloudletId() + indent + indent);
 
 
-                sb.append(task.cloudlet.getCloudletStatusString());
-                sb.append(indent + indent + task.cloudlet.getResourceId()
-                        + indent + indent + task.container.getId()
-                        + indent + indent
-                        + dft.format(task.cloudlet.getActualCPUTime()) + indent
-                        + indent + dft.format(task.cloudlet.getExecStartTime())
-                        + indent + indent
-                        + dft.format(task.cloudlet.getFinishTime())).append("\n");
+            sb.append(task.getCloudlet().getCloudletStatusString());
+            sb.append(indent + indent + task.getCloudlet().getResourceId()
+                    + indent + indent + task.getContainer().getId()
+                    + indent + indent
+                    + dft.format(task.getCloudlet().getActualCPUTime()) + indent
+                    + indent + dft.format(task.getCloudlet().getExecStartTime())
+                    + indent + indent
+                    + dft.format(task.getCloudlet().getFinishTime())).append("\n");
 
 
-
-
-        } Log.printLine(sb.toString());
+        }
+        Log.printLine(sb.toString());
     }
 
     public int getProcessedTasksCount() {
@@ -162,6 +172,6 @@ public class UserRequestScheduler extends SimEntity {
     }
 
     public Task getTaskForCloudlet(ContainerCloudlet cloudlet) {
-        return allTasks.stream().filter(t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId()).findFirst().orElse(null);
+        return allTasks.stream().filter(t -> t.getCloudlet().getCloudletId() == cloudlet.getCloudletId()).findFirst().orElse(null);
     }
 }

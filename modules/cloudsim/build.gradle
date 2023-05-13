@@ -7,8 +7,10 @@ plugins {
 //    id("net.ltgt.errorprone") version("2.0.2")
     id 'jacoco'
 }
+apply plugin: 'groovy'
 
 dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:3.0.17'
     implementation 'com.opencsv:opencsv:5.5.2'
     implementation 'org.jfree:jfreechart:1.5.3'
     implementation 'commons-io:commons-io:2.11.0'
@@ -31,7 +33,15 @@ dependencies {
 
 }
 
-description = 'cloudsim'
+description = 'ccloudsim'
+
+sourceSets {
+    main {
+        java { srcDirs = [] }    // no source dirs for the java compiler
+        groovy { srcDirs = ["src/main/java", "src/main/groovy"] }  // compile   everything in src/ with groovy
+    }
+}
+
 javadoc{
     options.tags = ["pre:a:Precondition","post:a:Postcondition"]
 }

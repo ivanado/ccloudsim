@@ -5,8 +5,8 @@ import lombok.Setter;
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.InfoPacket;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.Microservice;
-import org.cloudbus.cloudsim.container.app.Task;
+import org.cloudbus.cloudsim.container.app.model.Microservice;
+import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.resourceAllocators.ContainerAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
@@ -118,7 +118,7 @@ public class ContainerDatacenter extends SimEntity {
         Container container;
         if (ev.getData() instanceof Task) {
             Task task = (Task) ev.getData();
-            container = task.container;
+            container = task.getContainer();
         } else {
             container = (Container) ev.getData();
         }
@@ -134,28 +134,28 @@ public class ContainerDatacenter extends SimEntity {
 
 //calculate values
 
-        boolean result = containerAllocationPolicy.allocateHostForContainer(task.container, this.allHosts);
+        boolean result = containerAllocationPolicy.allocateHostForContainer(task.getContainer(), this.allHosts);
         if (ack) {
             int[] data = new int[3];
-            data[1] = task.container.getId();
+            data[1] = task.getContainer().getId();
 
             data[2] = result ? CloudSimTags.TRUE : CloudSimTags.FALSE;
 
             if (result) {
-                ContainerHost containerHost = containerAllocationPolicy.getContainerHost(task.container);
+                ContainerHost containerHost = containerAllocationPolicy.getContainerHost(task.getContainer());
                 data[0] = containerHost.getId();
                 if (containerHost.getId() == -1) {
 
                     Log.printLine(getName(), ": The ContainerHOST ID is not known (-1) !");
                 }
-                activeContainers.add(task.container);
-                if (task.container.isBeingInstantiated()) {
-                    task.container.setBeingInstantiated(false);
+                activeContainers.add(task.getContainer());
+                if (task.getContainer().isBeingInstantiated()) {
+                    task.getContainer().setBeingInstantiated(false);
                 }
-                task.container.updateContainerProcessing(CloudSim.clock(), containerAllocationPolicy.getContainerHost(task.container).getContainerScheduler().getAllocatedMipsForContainer(task.container));
+                task.getContainer().updateContainerProcessing(CloudSim.clock(), containerAllocationPolicy.getContainerHost(task.getContainer()).getContainerScheduler().getAllocatedMipsForContainer(task.getContainer()));
             } else {
                 data[0] = -1;
-                Log.printLine(String.format("Couldn't find a host for the container #%s", task.container.getUid()));
+                Log.printLine(String.format("Couldn't find a host for the container #%s", task.getContainer().getUid()));
 
             }
             send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), ContainerCloudSimTags.CONTAINER_CREATE_ACK, data);
@@ -187,7 +187,7 @@ public class ContainerDatacenter extends SimEntity {
 
         try {
             Task processCloudletTask = (Task) ev.getData();
-            ContainerCloudlet cl = processCloudletTask.cloudlet;
+            ContainerCloudlet cl = processCloudletTask.getCloudlet();
             if (cl.isFinished()) {
                 String name = CloudSim.getEntityName(cl.getUserId());
                 Log.printLine(getName(), ": Warning - Cloudlet #", cl.getCloudletId(), " owned by ", name, " is already completed/finished.");

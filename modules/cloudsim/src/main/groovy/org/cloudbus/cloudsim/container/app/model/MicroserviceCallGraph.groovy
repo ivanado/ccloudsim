@@ -1,10 +1,8 @@
-package org.cloudbus.cloudsim.container.app;
+package org.cloudbus.cloudsim.container.app.model
 
-import java.util.List;
 
-public class MicroserviceCallGraph {
-
-    public static List<Microservice> get(int userRequestType) {
+class MicroserviceCallGraph {
+    static List<Microservice> get(int userRequestType) {
         Microservice ms1 = new Microservice("A", 15);
         Microservice ms2 = new Microservice("B", 15);
         Microservice ms3 = new Microservice("D", 15);
@@ -15,6 +13,4 @@ public class MicroserviceCallGraph {
         return List.of(ms1, ms2, ms3);
     }
 
-
 }
-
