@@ -1,5 +1,6 @@
 package org.cloudbus.cloudsim.container.utils;
 
+import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.app.model.UserRequest;
 import org.cloudbus.cloudsim.container.app.model.algo.Firework;
 import org.cloudbus.cloudsim.container.app.model.algo.Pack;
@@ -41,6 +42,7 @@ public final class IDs {
         COUNTERS.put(Pack.class, 1);
         COUNTERS.put(Spark.class, 1);
         COUNTERS.put(Firework.class, 1);
+        COUNTERS.put(Task.class, 1);
     }
 
     private IDs() {
@@ -65,7 +67,7 @@ public final class IDs {
             }
         }
 
-        int result = -1;
+        int result;
         if (matchClass == null) {
             NO_COUNTERS.add(clazz);
             result = pollGlobalId();

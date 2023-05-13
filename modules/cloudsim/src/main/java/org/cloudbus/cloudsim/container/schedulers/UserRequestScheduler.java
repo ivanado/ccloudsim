@@ -19,7 +19,6 @@ import java.util.function.Predicate;
 
 public class UserRequestScheduler extends SimEntity {
 
-    public static final int MAX_USER_REQUESTS = 3;
     public int brokerId;
 
     public List<Task> finishedTasks;
@@ -99,9 +98,10 @@ public class UserRequestScheduler extends SimEntity {
     private void printQueues() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n=======SCHEDULER QUEUES=======").append("\n");
-        sb.append("All tasks list: ").append(String.join(",", allTasks.stream().map(t -> "container #" + t.getContainer().getId() + " cloudlet #" + t.getCloudlet().getCloudletId()).toList())).append("\n");
-        sb.append("Waiting tasks queue: ").append(String.join(",", waitingTasks.stream().map(t -> "container #" + t.getContainer().getId() + " cloudlet #" + t.getCloudlet().getCloudletId()).toList())).append("\n");
-        sb.append("Tasks queue: ").append(String.join(",", taskQueue.stream().map(t -> "container #" + t.getContainer().getId() + " cloudlet #" + t.getCloudlet().getCloudletId()).toList())).append("\n");
+        sb.append("All tasks list: ").append(String.join(", ", allTasks.stream().map(t -> "task-#"+t.getId()).toList())).append("\n");
+        sb.append("Waiting tasks queue: ").append(String.join(", ", waitingTasks.stream().map(t -> "task-#"+t.getId()).toList())).append("\n");
+        sb.append("Finished tasks list: ").append(String.join(", ", finishedTasks.stream().map(t  -> "task-#"+t.getId()).toList())).append("\n");
+        sb.append("Tasks queue: ").append(String.join(", ", taskQueue.stream().map(t  -> "task-#"+t.getId()).toList())).append("\n");
         sb.append("=============================").append("\n");
         Log.print(sb.toString());
     }
@@ -110,8 +110,9 @@ public class UserRequestScheduler extends SimEntity {
         Task finishedTask = (Task) ev.getData();
         finishedTasks.add(finishedTask);
 
+        int finishedTaskMicroserviceId=finishedTask.getMicroservice().getId();
         //if consumer tasks exist in waitingList move to taskQueue
-        List<Task> tasksReady = waitingTasks.stream().filter(task -> task.getProvider() == finishedTask).toList();
+        List<Task> tasksReady = waitingTasks.stream().filter(task -> task.getMicroservice().getProvider().getId() == finishedTaskMicroserviceId).toList();
         if (!tasksReady.isEmpty()) {
             taskQueue.addAll(tasksReady);
             waitingTasks.removeAll(tasksReady);
@@ -167,9 +168,6 @@ public class UserRequestScheduler extends SimEntity {
         Log.printLine(sb.toString());
     }
 
-    public int getProcessedTasksCount() {
-        return finishedTasks.size();
-    }
 
     public Task getTaskForCloudlet(ContainerCloudlet cloudlet) {
         return allTasks.stream().filter(t -> t.getCloudlet().getCloudletId() == cloudlet.getCloudletId()).findFirst().orElse(null);
