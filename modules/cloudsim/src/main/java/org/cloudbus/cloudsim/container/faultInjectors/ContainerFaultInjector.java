@@ -2,10 +2,10 @@ package org.cloudbus.cloudsim.container.faultInjectors;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
-import org.cloudbus.cloudsim.container.core.DatacenterResources;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -59,7 +59,7 @@ public class ContainerFaultInjector extends SimEntity {
         Container containerToFail = getRandomContainer();
         datacenter.removeRunningContainer(containerToFail);
         sendNow(datacenter.getId(), CloudSimTags.CLOUDLET_CANCEL, containerToFail);
-        dcResources.microserviceContainerFailureTimes.computeIfAbsent(containerToFail.getMicroserviceId(), c -> new ArrayList<>()).add(CloudSim.clock());
+        dcResources.getMicroserviceContainerFailureTimes().computeIfAbsent(containerToFail.getMicroserviceId(), c -> new ArrayList<>()).add(CloudSim.clock());
     }
 
     private Container getRandomContainer() {

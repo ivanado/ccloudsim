@@ -4,11 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.container.core.DatacenterResources;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -110,10 +110,10 @@ public class ContainerHostFaultInjector extends SimEntity {
                         CloudSim.clock(), msg));
         failHostContainers(host);
         host.setFailed(true);
-        dcResources.hostFailureTimes.computeIfAbsent(host,  h -> new ArrayList<>()).add(CloudSim.clock());
+        dcResources.getHostFailureTimes().computeIfAbsent(host,  h -> new ArrayList<>()).add(CloudSim.clock());
 
-        dcResources.runningHosts.remove(host);
-        dcResources.failedHosts.add(host);
+        dcResources.getRunningHosts().remove(host);
+        dcResources.getFailedHosts().add(host);
     }
 
 
