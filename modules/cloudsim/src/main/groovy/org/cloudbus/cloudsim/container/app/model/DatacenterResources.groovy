@@ -1,6 +1,5 @@
 package org.cloudbus.cloudsim.container.app.model
 
-import org.cloudbus.cloudsim.Cloudlet
 import org.cloudbus.cloudsim.container.core.Container
 import org.cloudbus.cloudsim.container.core.ContainerCloudlet
 import org.cloudbus.cloudsim.container.core.ContainerHost
@@ -26,6 +25,7 @@ class DatacenterResources {
     Map<ContainerHost, List<Double>> hostFailureTimes
     Map<Integer, List<Double>> microserviceContainerFailureTimes
 
+    Map<UserRequest, List<Task>> allTasksByUserRequest
     List<Task> runningTasks
     List<Task> finishedTasks
     List<Task> failedTasks
@@ -44,6 +44,7 @@ class DatacenterResources {
         this.microserviceRunningContainers = new HashMap<>()
         this.microserviceFinishedContainers = new HashMap<>()
         this.microserviceFailedContainers = new HashMap<>()
+        this.allTasksByUserRequest = new HashMap<>()
         this.hostFailureTimes = new HashMap<>()
         this.userRequestsByType = new HashMap<>()
         this.runningTasks = new ArrayList<>()
@@ -140,12 +141,12 @@ class DatacenterResources {
         failedCloudlets.add(cloudlet)
     }
 
-    def finishedCloudlet(ContainerCloudlet cloudlet) {
+    def finishCloudlet(ContainerCloudlet cloudlet) {
         runningCloudlets.remove(cloudlet)
         finishedCloudlets.add(cloudlet)
     }
 
-    def runningCloudlet(ContainerCloudlet cloudlet) {
+    def startCloudlet(ContainerCloudlet cloudlet) {
         runningCloudlets.add(cloudlet)
     }
 
@@ -168,12 +169,42 @@ class DatacenterResources {
     }
 
     Container getRandomContainerToFail() {
-        List<Container> containers = microserviceRunningContainers.values().flatten()
+        List<Container> containers = microserviceRunningContainers.values().collectMany { it }
         if (containers.isEmpty()) {
             return null
         }
 
         final int idx = MathUtil.randomInt(containers.size())
         return containers.get(idx)
+    }
+
+    def startTask(Task task) {
+        List<Task> tasks = this.allTasksByUserRequest[task.userRequest.id] ?: []
+        tasks.add(task)
+        this.runningTasks.add(task)
+    }
+
+    def finishTask(Task task) {
+        this.runningTasks.remove(task)
+        this.finishedTasks.add(task)
+    }
+
+    def failTask(Task task) {
+        this.runningTasks.remove(task)
+        this.failedTasks.add(task)
+    }
+
+    boolean hasTasksToProcess() {
+
+        return allTasksByUserRequest.values().flatten().size() > finishedTasks.size()
+
+    }
+
+    boolean allTasksProcessed() {
+        return allTasksByUserRequest.values().flatten().size() == finishedTasks.size()
+    }
+
+    Task getTask(ContainerCloudlet cloudlet) {
+        return runningTasks.find { t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId() }
     }
 }

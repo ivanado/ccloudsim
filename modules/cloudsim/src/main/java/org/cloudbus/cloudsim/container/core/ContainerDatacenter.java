@@ -24,16 +24,14 @@ public class ContainerDatacenter extends SimEntity {
 
     private double lastProcessTime = 0;
 
-    private DatacenterResources dcResources = DatacenterResources.get();
+    private final DatacenterResources dcResources = DatacenterResources.get();
 
     public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy) {
         super(name);
         this.characteristics = characteristics;
         this.containerAllocationPolicy = containerAllocationPolicy;
-//
 
 
-//        this.allHosts.addAll(this.characteristics.getHostList());
         dcResources.getRunningHosts().addAll(this.characteristics.getHostList());
     }
 
@@ -48,7 +46,7 @@ public class ContainerDatacenter extends SimEntity {
 
     @Override
     public void processEvent(SimEvent ev) {
-        int srcId = -1;
+        int srcId;
         switch (ev.getTag()) {
             // Resource characteristics inquiry
             case CloudSimTags.RESOURCE_CHARACTERISTICS -> {
@@ -74,7 +72,7 @@ public class ContainerDatacenter extends SimEntity {
             case CloudSimTags.INFOPKT_SUBMIT -> processPingRequest(ev);
             case ContainerCloudSimTags.CONTAINER_DC_LOG -> printResourcesStatus();
 
-            case ContainerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev, true);
+            case ContainerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev);
             case ContainerCloudSimTags.CONTAINER_DESTROY -> processContainerDestroy(ev);
             case ContainerCloudSimTags.CONTAINER_FAIL_DESTROY -> processContainerFailDestroy(ev);
             case CloudSimTags.CLOUDLET_SUBMIT -> processCloudletSubmit(ev);
@@ -97,12 +95,15 @@ public class ContainerDatacenter extends SimEntity {
     private void failCloudletRunningOnContainer(SimEvent ev) {
         Container container = (Container) ev.getData();
         ContainerCloudlet cloudletToFail = dcResources.getRunningCloudlets().stream().filter(cl -> cl.getContainerId() == container.getId()).findAny().orElse(null);
-        try {
-            cloudletToFail.setCloudletStatus(Cloudlet.FAILED);
-            dcResources.failCloudlet(cloudletToFail);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (cloudletToFail != null) {
+            try {
+                cloudletToFail.setCloudletStatus(Cloudlet.FAILED);
+                dcResources.failCloudlet(cloudletToFail);
+            } catch (Exception e) {
+                throw new RuntimeException("setting cloudlet status failed");
+            }
         }
+
         sendNow(getId(), ContainerCloudSimTags.CONTAINER_FAIL_DESTROY, container);
     }
 
@@ -114,48 +115,41 @@ public class ContainerDatacenter extends SimEntity {
 
 
     private void processContainerDestroy(SimEvent ev) {
-        Container container;
-        if (ev.getData() instanceof Task) {
-            Task task = (Task) ev.getData();
-            container = task.getContainer();
-        } else {
-            container = (Container) ev.getData();
-        }
+        Container container = (Container) ev.getData();
+
         containerAllocationPolicy.deallocateContainerFromHost(container);
 
         dcResources.finishContainer(container);
         printResourcesStatus();
     }
 
-    private void processContainerSubmit(SimEvent ev, boolean ack) {
+    private void processContainerSubmit(SimEvent ev) {
 
         Task task = (Task) ev.getData();
 
         boolean result = containerAllocationPolicy.allocateHostForContainer(task.getContainer(), dcResources.getRunningHosts());
-        if (ack) {
-            int[] data = new int[3];
-            data[1] = task.getContainer().getId();
 
-            data[2] = result ? CloudSimTags.TRUE : CloudSimTags.FALSE;
+        int[] data = new int[3];
+        data[1] = task.getContainer().getId();
+        data[2] = result ? CloudSimTags.TRUE : CloudSimTags.FALSE;
 
-            if (result) {
-                ContainerHost containerHost = containerAllocationPolicy.getContainerHost(task.getContainer());
-                data[0] = containerHost.getId();
-                if (containerHost.getId() == -1) {
-                    Log.printLine(getName(), ": The ContainerHOST ID is not known (-1) !");
-                }
-                dcResources.startContainer(task.getContainer());
-                if (task.getContainer().isBeingInstantiated()) {
-                    task.getContainer().setBeingInstantiated(false);
-                }
-                task.getContainer().updateContainerProcessing(CloudSim.clock(), containerAllocationPolicy.getContainerHost(task.getContainer()).getContainerScheduler().getAllocatedMipsForContainer(task.getContainer()));
-            } else {
-                data[0] = -1;
-                Log.printLine(String.format("Couldn't find a host for the container #%s", task.getContainer().getUid()));
-
+        if (result) {
+            ContainerHost containerHost = containerAllocationPolicy.getContainerHost(task.getContainer());
+            data[0] = containerHost.getId();
+            if (containerHost.getId() == -1) {
+                Log.printLine(getName(), ": The ContainerHOST ID is not known (-1) !");
             }
-            send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), ContainerCloudSimTags.CONTAINER_CREATE_ACK, data);
+            dcResources.startContainer(task.getContainer());
+            if (task.getContainer().isBeingInstantiated()) {
+                task.getContainer().setBeingInstantiated(false);
+            }
+            task.getContainer().updateContainerProcessing(CloudSim.clock(), containerAllocationPolicy.getContainerHost(task.getContainer()).getContainerScheduler().getAllocatedMipsForContainer(task.getContainer()));
+        } else {
+            data[0] = -1;
+            Log.printLine(String.format("Couldn't find a host for the container #%s", task.getContainer().getUid()));
+
         }
+        send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), ContainerCloudSimTags.CONTAINER_CREATE_ACK, data);
     }
 
     private void processOtherEvent(SimEvent ev) {
@@ -189,12 +183,12 @@ public class ContainerDatacenter extends SimEntity {
                 Log.printLine(getName(), ": Warning - Cloudlet #", cl.getCloudletId(), " owned by ", name, " is already completed/finished.");
                 Log.printLine("Therefore, it is not being executed again");
                 Log.printLine();
-                dcResources.finishedCloudlet(cl);
+                dcResources.finishCloudlet(cl);
                 sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, cl);
 
                 return;
             }
-            dcResources.runningCloudlet(cl);
+            dcResources.startCloudlet(cl);
             cl.setResourceParameter(getId(), getCharacteristics().getCostPerSecond(), getCharacteristics().getCostPerBw());
 
             int userId = cl.getUserId();

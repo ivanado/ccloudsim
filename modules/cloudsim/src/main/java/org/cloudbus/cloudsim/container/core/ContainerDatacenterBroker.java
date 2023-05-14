@@ -9,8 +9,6 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class ContainerDatacenterBroker extends SimEntity {
@@ -19,16 +17,13 @@ public class ContainerDatacenterBroker extends SimEntity {
     public Integer datacenterId;
     public ContainerDatacenterCharacteristics datacenterCharacteristics;
 
-    public List<Task> runningTasks;
-
     public UserRequestScheduler taskScheduler;
 
-    private DatacenterResources dcResources = DatacenterResources.get();
+    private final DatacenterResources dcResources = DatacenterResources.get();
 
     public ContainerDatacenterBroker(String name) {
         super(name);
         this.taskScheduler = new UserRequestScheduler("BM-TaskScheduler", getId());
-        this.runningTasks = new ArrayList<>();
     }
 
     @Override
@@ -62,7 +57,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
                 sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DC_LOG);
 //                ---->process the cloudlet on created container
-                Task processCloudletTask = runningTasks.stream().filter(t -> t.getContainer().getId() == containerId).findFirst().orElse(null);
+                Task processCloudletTask = dcResources.getRunningTasks().stream().filter(t -> t.getContainer().getId() == containerId).findFirst().orElse(null);
                 if (processCloudletTask != null) {
                     processCloudletTask.getCloudlet().setContainerId(containerId);
                     sendNow(datacenterId, CloudSimTags.CLOUDLET_SUBMIT, processCloudletTask);
@@ -74,7 +69,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
     private void processTaskSubmit(SimEvent ev) {
         Task task = (Task) ev.getData();
-        runningTasks.add(task);
+        dcResources.startTask(task);
 
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_SUBMIT, task);
     }
@@ -89,30 +84,25 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
     private void processCloudletReturn(SimEvent ev) {
-        Task task;
-        if (ev.getData() instanceof Task) {
-            task = (Task) ev.getData();
-        } else {
-            ContainerCloudlet cloudlet = (ContainerCloudlet) ev.getData();
-            task = taskScheduler.getTaskForCloudlet(cloudlet);
-        }
+
+        ContainerCloudlet cloudlet = (ContainerCloudlet) ev.getData();
 
 
-        Log.printLine(getName(), ": Cloudlet #", task.getCloudlet().getCloudletId(),
-                " returned. finished Cloudlets = ", taskScheduler.finishedTasks.stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")));
-
+        Log.printLine(getName(), ": Cloudlet #", cloudlet.getCloudletId(),
+                " returned. finished Cloudlets = ", dcResources.getFinishedTasks().stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")), ", ", cloudlet.getCloudletId());
+        Task task = dcResources.getTask(cloudlet);
         //deallocate the container used for cloudlet processing
-        sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task);
+        sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task.getContainer());
         sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_RETURN, task);
-        runningTasks.remove(task);
+        dcResources.finishTask(task);
 
 
-        if (this.taskScheduler.allTasksProcessed()) {
+        if (dcResources.allTasksProcessed()) {
             Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": All Cloudlets executed. Finishing...");
             clearDatacenters();
             finishExecution();
         } else { // some cloudlets haven't finished yet
-            if (taskScheduler.allTasks.size() > taskScheduler.finishedTasks.size()) {
+            if (dcResources.hasTasksToProcess()) {
                 // all the cloudlets sent finished. It means that some bount
                 // cloudlet is waiting its container to be created
                 //should never happen since the contains are allocated for specific cloudlet
@@ -141,7 +131,10 @@ public class ContainerDatacenterBroker extends SimEntity {
         this.datacenterId = CloudSim.getCloudResourceList() != null && CloudSim.getCloudResourceList().size() > 0
                 ? CloudSim.getCloudResourceList().get(0)
                 : null;
-        sendNow(datacenterId, CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
+        if (datacenterId != null) {
+            sendNow(datacenterId, CloudSimTags.RESOURCE_CHARACTERISTICS, getId());
+        }
+
     }
 
     @Override
