@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 
 public class UserRequestScheduler extends SimEntity {
@@ -98,10 +99,10 @@ public class UserRequestScheduler extends SimEntity {
     private void printQueues() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n=======SCHEDULER QUEUES=======").append("\n");
-        sb.append("All tasks list: ").append(String.join(", ", allTasks.stream().map(t -> "task-#"+t.getId()).toList())).append("\n");
-        sb.append("Waiting tasks queue: ").append(String.join(", ", waitingTasks.stream().map(t -> "task-#"+t.getId()).toList())).append("\n");
-        sb.append("Finished tasks list: ").append(String.join(", ", finishedTasks.stream().map(t  -> "task-#"+t.getId()).toList())).append("\n");
-        sb.append("Tasks queue: ").append(String.join(", ", taskQueue.stream().map(t  -> "task-#"+t.getId()).toList())).append("\n");
+        sb.append("All tasks list: ").append(allTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
+        sb.append("Waiting tasks queue: ").append(waitingTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
+        sb.append("Finished tasks list: ").append(finishedTasks.stream().map(t  -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
+        sb.append("Tasks queue: ").append(taskQueue.stream().map(t  -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
         sb.append("=============================").append("\n");
         Log.print(sb.toString());
     }

@@ -79,6 +79,10 @@ public class ContainerCloudSimTags {
      * Invoked in the dc
      */
     public static final int CONTAINER_DC_EVENT = ContainerSimBASE + 16; //invoked repeatedly to process the cloudlet
+    public static final int CONTAINER_FAIL_DESTROY = ContainerSimBASE + 17;
+
+    public static final int CLOUDLET_FAIL = ContainerSimBASE + 18;
+
     private ContainerCloudSimTags() {
         // TODO Auto-generated constructor stub
         throw new UnsupportedOperationException("ContainerCloudSim Tags cannot be instantiated");

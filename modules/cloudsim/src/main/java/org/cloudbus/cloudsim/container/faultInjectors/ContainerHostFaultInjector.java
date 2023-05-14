@@ -2,7 +2,7 @@ package org.cloudbus.cloudsim.container.faultInjectors;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.math3.random.RandomDataGenerator;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
 import org.cloudbus.cloudsim.container.core.Container;
@@ -10,7 +10,6 @@ import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
@@ -25,12 +24,13 @@ public class ContainerHostFaultInjector extends SimEntity {
     @Setter
     private ContainerDatacenter datacenter;
     private final Map<ContainerHost, List<Double>> hostFailureTimes;
-    private DatacenterResources dcResources;
+    private DatacenterResources dcResources = DatacenterResources.get();
+    private RandomDataGenerator  randomData;
     public ContainerHostFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerHostFaultInjector");
         this.setDatacenter(datacenter);
         this.hostFailureTimes = new HashMap<>();
-        this.dcResources = DatacenterResources.get();
+        this.randomData = new RandomDataGenerator();
     }
 
     @Override
@@ -50,8 +50,9 @@ public class ContainerHostFaultInjector extends SimEntity {
     }
 
     private double getNextFaultDelay() {
-        PoissonDistribution poissonDistribution = new PoissonDistribution(100);
-        return poissonDistribution.sample();
+
+   long x =   randomData.nextPoisson(0.0003);
+   return x;
 //        return Math.random() * 3600;
     }
 
@@ -66,7 +67,7 @@ public class ContainerHostFaultInjector extends SimEntity {
 
     private void generateHostFaultAndScheduleNext() {
         try {
-            final ContainerHost host = getRandomHost();
+            final ContainerHost host = DatacenterResources.get().getRandomHost();
             if (host != null) {
                 injectHostFault(host);
                 scheduleHostRecovery(host);
@@ -74,7 +75,7 @@ public class ContainerHostFaultInjector extends SimEntity {
 
 
         } finally {
-            if (datacenter.hasRunningHosts()) {
+            if (dcResources.hasRunningHosts()) {
                 scheduleHostFault();
             }
         }
@@ -110,7 +111,7 @@ public class ContainerHostFaultInjector extends SimEntity {
                         CloudSim.clock(), msg));
         failHostContainers(host);
         host.setFailed(true);
-        dcResources.getHostFailureTimes().computeIfAbsent(host,  h -> new ArrayList<>()).add(CloudSim.clock());
+        dcResources.getHostFailureTimes().computeIfAbsent(host, h -> new ArrayList<>()).add(CloudSim.clock());
 
         dcResources.getRunningHosts().remove(host);
         dcResources.getFailedHosts().add(host);
@@ -126,19 +127,7 @@ public class ContainerHostFaultInjector extends SimEntity {
         Log.printLine(getClass().getSimpleName(),
                 ": Sending CONTAINER_DESTROY for container #", container.getId(),
                 " with uid=", container.getUid(), " from host #", container.getHost().getId(), " to datacenter ", this.datacenter.getName());
-        sendNow(datacenter.getId(), CloudSimTags.CLOUDLET_CANCEL, container);
-    }
-
-    private ContainerHost getRandomHost() {
-        if (datacenter.getHostList().isEmpty()) {
-            return null;
-        }
-        List<ContainerHost> runningHosts = datacenter.getHostList().stream().filter(host -> !host.isFailed()).toList();
-        if (runningHosts.isEmpty()) {
-            return null;
-        }
-        final int idx = (int) (Math.random() * runningHosts.size());
-        return runningHosts.get(idx);
+        sendNow(datacenter.getId(), ContainerCloudSimTags.CLOUDLET_FAIL, container);
     }
 
 
@@ -147,5 +136,13 @@ public class ContainerHostFaultInjector extends SimEntity {
 
     }
 
+    public static void main(String[] args) {
+        RandomDataGenerator randomData = new RandomDataGenerator();
+        for(int i =0; i <300;i++){
+            long x =   randomData.nextPoisson(200);
+            System.out.println("->"+x);
+        }
+
+    }
 
 }

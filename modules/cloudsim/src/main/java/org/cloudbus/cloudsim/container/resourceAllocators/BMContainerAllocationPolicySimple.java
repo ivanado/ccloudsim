@@ -15,7 +15,7 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
     private Map<String, ContainerHost> containerHostTable;
 
 
-    public BMContainerAllocationPolicySimple(List<ContainerHost> hosts) {
+    public BMContainerAllocationPolicySimple() {
         this.freePes = new ArrayList<>();
         this.containerUsedPes = new HashMap<>();
         this.containerHostTable = new HashMap<>();

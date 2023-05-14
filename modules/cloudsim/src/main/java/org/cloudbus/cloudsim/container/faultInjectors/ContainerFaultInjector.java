@@ -56,24 +56,12 @@ public class ContainerFaultInjector extends SimEntity {
     }
 
     private void failRandomContainerAndScheduleNext() {
-        Container containerToFail = getRandomContainer();
-        datacenter.removeRunningContainer(containerToFail);
+        Container containerToFail = dcResources.getRandomContainerToFail();
         sendNow(datacenter.getId(), CloudSimTags.CLOUDLET_CANCEL, containerToFail);
         dcResources.getMicroserviceContainerFailureTimes().computeIfAbsent(containerToFail.getMicroserviceId(), c -> new ArrayList<>()).add(CloudSim.clock());
     }
 
-    private Container getRandomContainer() {
-        if (datacenter.getContainerList().isEmpty()) {
-            return null;
-        }
-        List<Container> runningContainers = datacenter.getContainerList();
-        if (runningContainers.isEmpty()) {
-            return null;
-        }
-        final int idx = (int) (Math.random() * runningContainers.size());
-        return runningContainers.get(idx);
 
-    }
 
     @Override
     public void shutdownEntity() {

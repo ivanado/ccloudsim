@@ -1,13 +1,15 @@
 package org.cloudbus.cloudsim.container.app.model
 
-
+import org.cloudbus.cloudsim.Cloudlet
 import org.cloudbus.cloudsim.container.core.Container
+import org.cloudbus.cloudsim.container.core.ContainerCloudlet
 import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.core.CloudSim
+import org.cloudbus.cloudsim.util.MathUtil
 
 class DatacenterResources {
     public static final double MAX_HOST_PES = 32
-    public static final double MS_RESOURCE_THRESHOLD = 0.8D
+    public static final double MS_RESOURCE_THRESHOLD = 0.8
     private static DatacenterResources INSTANCE = null
 
     List<ContainerHost> runningHosts
@@ -24,6 +26,15 @@ class DatacenterResources {
     Map<ContainerHost, List<Double>> hostFailureTimes
     Map<Integer, List<Double>> microserviceContainerFailureTimes
 
+    List<Task> runningTasks
+    List<Task> finishedTasks
+    List<Task> failedTasks
+
+    List<ContainerCloudlet> runningCloudlets
+    List<ContainerCloudlet> finishedCloudlets
+    List<ContainerCloudlet> failedCloudlets
+
+
     private DatacenterResources() {
         this.runningHosts = new ArrayList<>()
         this.failedHosts = new ArrayList<>()
@@ -35,19 +46,21 @@ class DatacenterResources {
         this.microserviceFailedContainers = new HashMap<>()
         this.hostFailureTimes = new HashMap<>()
         this.userRequestsByType = new HashMap<>()
-
+        this.runningTasks = new ArrayList<>()
+        this.finishedTasks = new ArrayList<>()
+        this.failedTasks = new ArrayList<>()
+        this.runningCloudlets = new ArrayList<>()
+        this.finishedCloudlets = new ArrayList<>()
+        this.failedCloudlets = new ArrayList<>()
     }
 
     List<ContainerHost> getHostsWithFreePes(int requiredPes) {
-        return this.runningHosts.stream().filter(h -> h.getNumberOfFreePes() >= requiredPes).toList()
+        return this.runningHosts.findAll { h -> h.getNumberOfFreePes() >= requiredPes }
     }
 
     List<ContainerHost> getHostsRunningMicroserviceContainer(int msId) {
-        return this.runningHosts.stream().filter(h -> h
-                .getContainerList()
-                .stream()
-                .anyMatch(c -> c.getMicroserviceId() == msId)
-        ).toList()
+
+        return this.runningHosts.findAll { h -> h.getContainerList().any { c -> c.getMicroserviceId() == msId } }
     }
 
     List<Container> getMicroserviceContainer(int msId) {
@@ -101,6 +114,14 @@ class DatacenterResources {
 
     }
 
+    ContainerHost getRandomHost() {
+        if (runningHosts.isEmpty()) {
+            return null
+        }
+
+        final int idx = MathUtil.randomInt(runningHosts.size())
+        return runningHosts.get(idx)
+    }
 
     static synchronized DatacenterResources get() {
         if (INSTANCE == null)
@@ -112,5 +133,47 @@ class DatacenterResources {
     static void main(String[] args) {
 
 
+    }
+
+    def failCloudlet(ContainerCloudlet cloudlet) {
+        runningCloudlets.remove(cloudlet)
+        failedCloudlets.add(cloudlet)
+    }
+
+    def finishedCloudlet(ContainerCloudlet cloudlet) {
+        runningCloudlets.remove(cloudlet)
+        finishedCloudlets.add(cloudlet)
+    }
+
+    def runningCloudlet(ContainerCloudlet cloudlet) {
+        runningCloudlets.add(cloudlet)
+    }
+
+    boolean hasRunningHosts() {
+        return !runningHosts.isEmpty()
+    }
+
+    def failContainer(Container container) {
+        this.microserviceRunningContainers[container.getMicroserviceId()]?.remove(container)
+        this.microserviceFailedContainers.computeIfAbsent(container.getMicroserviceId(), c -> new ArrayList<>()).add(container)
+    }
+
+    def finishContainer(Container container) {
+        this.microserviceRunningContainers[container.getMicroserviceId()]?.remove(container)
+        this.microserviceFinishedContainers.computeIfAbsent(container.getMicroserviceId(), c -> new ArrayList<>()).add(container)
+    }
+
+    def startContainer(Container container) {
+        this.microserviceRunningContainers.computeIfAbsent(container.getMicroserviceId(), c -> new ArrayList<>()).add(container)
+    }
+
+    Container getRandomContainerToFail() {
+        List<Container> containers = microserviceRunningContainers.values().flatten()
+        if (containers.isEmpty()) {
+            return null
+        }
+
+        final int idx = MathUtil.randomInt(containers.size())
+        return containers.get(idx)
     }
 }

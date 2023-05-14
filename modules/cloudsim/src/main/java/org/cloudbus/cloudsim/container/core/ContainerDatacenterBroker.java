@@ -1,6 +1,7 @@
 package org.cloudbus.cloudsim.container.core;
 
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.schedulers.UserRequestScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -9,15 +10,12 @@ import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ContainerDatacenterBroker extends SimEntity {
 
 
-    public Map<Integer, Integer> containerToHostMap;
     public Integer datacenterId;
     public ContainerDatacenterCharacteristics datacenterCharacteristics;
 
@@ -25,9 +23,10 @@ public class ContainerDatacenterBroker extends SimEntity {
 
     public UserRequestScheduler taskScheduler;
 
+    private DatacenterResources dcResources = DatacenterResources.get();
+
     public ContainerDatacenterBroker(String name) {
         super(name);
-        this.containerToHostMap = new HashMap<>();
         this.taskScheduler = new UserRequestScheduler("BM-TaskScheduler", getId());
         this.runningTasks = new ArrayList<>();
     }
@@ -59,9 +58,7 @@ public class ContainerDatacenterBroker extends SimEntity {
             if (hostId == -1) {
                 Log.printLine("Error : Where is the HOST");
             } else {
-                containerToHostMap.put(containerId, hostId);
-                Log.printLine(getName(), ": The Container #", containerId,
-                        ", is created on host #", hostId);
+                Log.printLine(getName(), ": The Container #", containerId, ", is created on host #", hostId);
 
                 sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DC_LOG);
 //                ---->process the cloudlet on created container
@@ -102,7 +99,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
         Log.printLine(getName(), ": Cloudlet #", task.getCloudlet().getCloudletId(),
-                " returned. "," finished Cloudlets = ", taskScheduler.finishedTasks.stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")));
+                " returned. finished Cloudlets = ", taskScheduler.finishedTasks.stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")));
 
         //deallocate the container used for cloudlet processing
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task);

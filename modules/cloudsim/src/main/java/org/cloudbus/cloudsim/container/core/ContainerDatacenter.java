@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.InfoPacket;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.model.Microservice;
+import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.resourceAllocators.ContainerAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -13,38 +13,28 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ContainerDatacenter extends SimEntity {
     private final ContainerAllocationPolicy containerAllocationPolicy;
-    private final double schedulingInterval;
 
     @Getter
     @Setter
     private ContainerDatacenterCharacteristics characteristics;
 
-    private List<ContainerHost> allHosts;
-
-    private List<Container> activeContainers;
     private double lastProcessTime = 0;
 
-    List<ContainerCloudlet> runningCloudlets;
-    private List<Container> failedContainers;
+    private DatacenterResources dcResources = DatacenterResources.get();
 
-    public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy, double schedulingInterval) {
+    public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy) {
         super(name);
         this.characteristics = characteristics;
         this.containerAllocationPolicy = containerAllocationPolicy;
-        this.schedulingInterval = schedulingInterval;
-        this.allHosts = new ArrayList<>();
-        this.activeContainers = new ArrayList<>();
-        this.runningCloudlets = new ArrayList<>();
-        this.failedContainers = new ArrayList<>();
+//
 
 
-        this.allHosts.addAll(this.characteristics.getHostList());
+//        this.allHosts.addAll(this.characteristics.getHostList());
+        dcResources.getRunningHosts().addAll(this.characteristics.getHostList());
     }
 
     @Override
@@ -86,25 +76,34 @@ public class ContainerDatacenter extends SimEntity {
 
             case ContainerCloudSimTags.CONTAINER_SUBMIT -> processContainerSubmit(ev, true);
             case ContainerCloudSimTags.CONTAINER_DESTROY -> processContainerDestroy(ev);
+            case ContainerCloudSimTags.CONTAINER_FAIL_DESTROY -> processContainerFailDestroy(ev);
             case CloudSimTags.CLOUDLET_SUBMIT -> processCloudletSubmit(ev);
             case ContainerCloudSimTags.CONTAINER_DC_EVENT -> updateAndCheckProcessing();
-            case CloudSimTags.CLOUDLET_CANCEL -> cancelCloudletRunningOnContainer(ev);
+            case ContainerCloudSimTags.CLOUDLET_FAIL -> failCloudletRunningOnContainer(ev);
             default -> processOtherEvent(ev);
         }
     }
 
-    private void cancelCloudletRunningOnContainer(SimEvent ev) {
+    private void processContainerFailDestroy(SimEvent ev) {
         Container container = (Container) ev.getData();
-        ContainerCloudlet cloudletToFail = runningCloudlets.stream().filter(cl -> cl.getContainerId() == container.getId()).findAny().orElse(null);
+
+        containerAllocationPolicy.deallocateContainerFromHost(container);
+
+        dcResources.failContainer(container);
+        printResourcesStatus();
+
+    }
+
+    private void failCloudletRunningOnContainer(SimEvent ev) {
+        Container container = (Container) ev.getData();
+        ContainerCloudlet cloudletToFail = dcResources.getRunningCloudlets().stream().filter(cl -> cl.getContainerId() == container.getId()).findAny().orElse(null);
         try {
             cloudletToFail.setCloudletStatus(Cloudlet.FAILED);
-            failedContainers.add(container);
-//            container.getContainerCloudletScheduler().cloudletCancel(cloudletToFail.getCloudletId());
-//            cloudletToFail.
+            dcResources.failCloudlet(cloudletToFail);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        sendNow(getId(), ContainerCloudSimTags.CONTAINER_DESTROY, container);
+        sendNow(getId(), ContainerCloudSimTags.CONTAINER_FAIL_DESTROY, container);
     }
 
 
@@ -124,7 +123,7 @@ public class ContainerDatacenter extends SimEntity {
         }
         containerAllocationPolicy.deallocateContainerFromHost(container);
 
-        activeContainers.remove(container);
+        dcResources.finishContainer(container);
         printResourcesStatus();
     }
 
@@ -132,9 +131,7 @@ public class ContainerDatacenter extends SimEntity {
 
         Task task = (Task) ev.getData();
 
-//calculate values
-
-        boolean result = containerAllocationPolicy.allocateHostForContainer(task.getContainer(), this.allHosts);
+        boolean result = containerAllocationPolicy.allocateHostForContainer(task.getContainer(), dcResources.getRunningHosts());
         if (ack) {
             int[] data = new int[3];
             data[1] = task.getContainer().getId();
@@ -145,10 +142,9 @@ public class ContainerDatacenter extends SimEntity {
                 ContainerHost containerHost = containerAllocationPolicy.getContainerHost(task.getContainer());
                 data[0] = containerHost.getId();
                 if (containerHost.getId() == -1) {
-
                     Log.printLine(getName(), ": The ContainerHOST ID is not known (-1) !");
                 }
-                activeContainers.add(task.getContainer());
+                dcResources.startContainer(task.getContainer());
                 if (task.getContainer().isBeingInstantiated()) {
                     task.getContainer().setBeingInstantiated(false);
                 }
@@ -193,12 +189,12 @@ public class ContainerDatacenter extends SimEntity {
                 Log.printLine(getName(), ": Warning - Cloudlet #", cl.getCloudletId(), " owned by ", name, " is already completed/finished.");
                 Log.printLine("Therefore, it is not being executed again");
                 Log.printLine();
-                runningCloudlets.remove(cl);
-                sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, processCloudletTask);
+                dcResources.finishedCloudlet(cl);
+                sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, cl);
 
                 return;
             }
-            runningCloudlets.add(cl);
+            dcResources.runningCloudlet(cl);
             cl.setResourceParameter(getId(), getCharacteristics().getCostPerSecond(), getCharacteristics().getCostPerBw());
 
             int userId = cl.getUserId();
@@ -232,7 +228,7 @@ public class ContainerDatacenter extends SimEntity {
 
         if (CloudSim.clock() < 0.111 || CloudSim.clock() > getLastProcessTime() + CloudSim.getMinTimeBetweenEvents()) {
             double smallerTime = Double.MAX_VALUE;
-            for (ContainerHost host : allHosts) {
+            for (ContainerHost host : dcResources.getRunningHosts()) {
                 double time = host.updateContainerProcessing(CloudSim.clock());
                 // what time do we expect that the next cloudlet will finish?
                 if (time > 0.0 && time < smallerTime) {
@@ -259,32 +255,30 @@ public class ContainerDatacenter extends SimEntity {
     }
 
     protected void checkCloudletCompletion() {
-        for (ContainerHost host : allHosts) {
+        for (ContainerHost host : dcResources.getRunningHosts()) {
             for (Container container : host.getContainerList()) {
                 while (container.getContainerCloudletScheduler().isFinishedCloudlets()) {
                     Cloudlet cl = container.getContainerCloudletScheduler().getNextFinishedCloudlet();
                     if (cl != null) {
-
                         sendNow(cl.getUserId(), CloudSimTags.CLOUDLET_RETURN, cl);
                     }
                 }
             }
-
         }
     }
 
-    public List<ContainerHost> getHostList() {
-        return getCharacteristics().getHostList();
-    }
+//    public List<ContainerHost> getHostList() {
+//        return getCharacteristics().getHostList();
+//    }
 
-    public List<Container> getContainerList() {
-        return activeContainers;
-    }
+//    public List<Container> getContainerList() {
+//        return activeContainers;
+//    }
 
     private void printResourcesStatus() {
         Log.printLine();
         Log.printLine("========== DATACENTER " + getName() + " ==========");
-        getHostList().forEach(containerHost -> {
+        dcResources.getRunningHosts().forEach(containerHost -> {
             List<String> containers = containerHost.getContainerList().stream().map(container -> String.valueOf(container.getId())).toList();
 
             String msg = "Host #" + containerHost.getId() + "\t AllPes=" + containerHost.getNumberOfPes() + " Host-FreePes=" + containerHost.getNumberOfFreePes() + " Scheduler-FreePes=" + containerAllocationPolicy.getFreePesForHost(containerHost.getId()) + " Containers=" + containers;
@@ -294,37 +288,4 @@ public class ContainerDatacenter extends SimEntity {
         Log.printLine("========== ============== ==========\n");
     }
 
-    public boolean hasRunningHosts() {
-        return this.allHosts.stream().anyMatch(h -> !h.isFailed());
-    }
-
-    public List<ContainerHost> getRunningHosts() {
-        return this.allHosts.stream().filter(h -> !h.isFailed()).toList();
-    }
-
-    public void removeRunningContainer(Container containerToFail) {
-        getContainerList().remove(containerToFail);
-    }
-
-    public int getContainerReplicaCount(Microservice ms) {
-        return (int) this.activeContainers.stream().filter(c -> {
-            return c.getMicroserviceId() == ms.getId();
-        }).count();
-    }
-    public int getContainerReplicaCount(int msId) {
-        return (int) this.activeContainers.stream().filter(c -> {
-            return c.getMicroserviceId() == msId;
-        }).count();
-    }
-    public List<ContainerHost> getHostsWithFreePes(int requiredPes){
-        return getRunningHosts().stream().filter(host->{return host.getNumberOfFreePes() >= requiredPes;}).collect(Collectors.toList());
-    }
-
-    public List<ContainerHost> getHostsRunningMicroservice(int msId) {
-        return getRunningHosts().stream().filter(host->{return host.hasContainer(msId);}).collect(Collectors.toList());
-    }
-
-    public List<Container> getContainersRunningMicroservice(int msId) {
-        return getContainerList().stream().filter(container -> {return container.getMicroserviceId() == msId;}).toList();
-    }
 }
