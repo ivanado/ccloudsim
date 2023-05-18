@@ -2,7 +2,7 @@ package org.cloudbus.cloudsim.container.faultInjectors;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
@@ -20,13 +20,13 @@ import java.util.function.Predicate;
 public class ContainerFaultInjector extends SimEntity {
     private final ContainerDatacenter datacenter;
     private Map<Integer, List<Double>> microserviceContainerFailureTimes;
-    private DatacenterResources dcResources;
+    private DatacenterMetrics dcResources;
 
     public ContainerFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerFaultInjector");
         this.datacenter = datacenter;
         this.microserviceContainerFailureTimes = new HashMap<>();
-        this.dcResources = DatacenterResources.get();
+        this.dcResources = DatacenterMetrics.get();
     }
 
     @Override

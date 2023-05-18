@@ -14,7 +14,7 @@ class GreyWolf {
 
     int currentPositionIndex = -1
     double fitnessValue = -1
-
+Map objectives
     GreyWolf() {
         this.id = IDs.pollId(GreyWolf.class)
         this.rank = Rank.OMEGA
@@ -22,7 +22,8 @@ class GreyWolf {
 
     def calculateFitnessFunctionValue(Task taskToSchedule) {
         //calculate all metrics for a microservice being deployed in a new container on the currentPositionHost
-        this.fitnessValue = ObjectiveFunction.calculate(taskToSchedule, currentPosition)
+        this.objectives = ObjectiveFunction.calculate(taskToSchedule, currentPosition)
+        this.fitnessValue=this.objectives.values().sum()
     }
 
     @Override

@@ -6,10 +6,10 @@ import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.core.CloudSim
 import org.cloudbus.cloudsim.util.MathUtil
 
-class DatacenterResources {
+class DatacenterMetrics {
     public static final double MAX_HOST_PES = 32
     public static final double MS_RESOURCE_THRESHOLD = 0.8
-    private static DatacenterResources INSTANCE = null
+    private static DatacenterMetrics INSTANCE = null
 
     List<ContainerHost> runningHosts
     List<ContainerHost> failedHosts
@@ -33,9 +33,9 @@ class DatacenterResources {
     List<ContainerCloudlet> runningCloudlets
     List<ContainerCloudlet> finishedCloudlets
     List<ContainerCloudlet> failedCloudlets
+    Map bestObjectiveFunctionValues
 
-
-    private DatacenterResources() {
+    private DatacenterMetrics() {
         this.runningHosts = new ArrayList<>()
         this.failedHosts = new ArrayList<>()
         this.allMicroservices = MicroserviceCallGraph.get().get(1)
@@ -124,9 +124,9 @@ class DatacenterResources {
         return runningHosts.get(idx)
     }
 
-    static synchronized DatacenterResources get() {
+    static synchronized DatacenterMetrics get() {
         if (INSTANCE == null)
-            INSTANCE = new DatacenterResources()
+            INSTANCE = new DatacenterMetrics()
 
         return INSTANCE
     }
@@ -211,5 +211,9 @@ class DatacenterResources {
 
     Task getTask(Container container) {
         return allTasksByUserRequest.values().flatten().find { t -> t.container.getId() == container.getId() }
+    }
+
+    void setBestObjectiveFunctionValues(Map map) {
+        this.bestObjectiveFunctionValues = map
     }
 }

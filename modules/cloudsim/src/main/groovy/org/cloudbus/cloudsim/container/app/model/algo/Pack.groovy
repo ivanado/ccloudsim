@@ -1,7 +1,6 @@
 package org.cloudbus.cloudsim.container.app.model.algo
 
 import org.cloudbus.cloudsim.Log
-import org.cloudbus.cloudsim.container.app.model.ObjectiveFunction
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.container.utils.IDs
@@ -45,7 +44,7 @@ class Pack {
             gw.rank = Rank.getRank( i + 1 < 5 ? i + 1 : 4)
             gw.currentPositionIndex = spark.position;
             gw.currentPosition = hostsToSearch.get(gw.currentPositionIndex);
-            Log.printLine("Pack#$id updatePosition for gw#$gw.id to $gw.currentPositionIndex")
+//            Log.printLine("Pack#$id updatePosition for gw#$gw.id to $gw.currentPositionIndex")
 
         }
     }
@@ -55,8 +54,6 @@ class Pack {
         double E = 1 * a - r;
 
         for (GreyWolf greyWolf : this.greyWolves) {
-            //dAlpha=c1*posAlpha-poscurrebt->c1=normalized amplitude*r-----normalAmplitude*r(posalpha - pos current)
-            //dbeta=c2*posBeta-poscurrebt->c2=normalized amplitude*r-----normalAmplitude*r(posbeta - pos current)
             double distanceAlpha = amplitude * r * Math.abs(getByRank(Rank.ALPHA).currentPositionIndex - greyWolf.currentPositionIndex)
             double distanceBeta = amplitude * r * Math.abs(getByRank(Rank.BETA).currentPositionIndex - greyWolf.currentPositionIndex)
             double distanceDelta = amplitude * r*Math.abs(getByRank(Rank.DELTA).currentPositionIndex - greyWolf.currentPositionIndex)
@@ -67,7 +64,7 @@ class Pack {
 
             greyWolf.currentPositionIndex = newPosition % (hostsToSearch.size() - 1)
             greyWolf.currentPosition = hostsToSearch.get(greyWolf.currentPositionIndex)
-            Log.printLine("Pack#$id  updatePosition for gw#$greyWolf.id to $greyWolf.currentPositionIndex")
+//            Log.printLine("Pack#$id  updatePosition for gw#$greyWolf.id to $greyWolf.currentPositionIndex")
 
         }
     }

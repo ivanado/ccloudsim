@@ -6,7 +6,7 @@ import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.util.MathUtil
 
 class ObjectiveFunction {
-    private static DatacenterResources dcResources = DatacenterResources.get()
+    private static DatacenterMetrics dcResources = DatacenterMetrics.get()
 
     static double calculateThresholdDistance(Task taskToSchedule) {
         Set<Microservice> runningMicroservices = new HashSet<>(dcResources.runningMicroservices)
@@ -14,8 +14,8 @@ class ObjectiveFunction {
 
         return runningMicroservices.stream().mapToDouble(ms ->
                 ms == taskToSchedule.microservice
-                        ? Math.abs(dcResources.getContainerResourceConsumption(taskToSchedule) - DatacenterResources.MS_RESOURCE_THRESHOLD)
-                        : Math.abs(dcResources.getContainerResourceConsumption(ms.getId(), taskToSchedule.userRequest.type.id) - DatacenterResources.MS_RESOURCE_THRESHOLD)
+                        ? Math.abs(dcResources.getContainerResourceConsumption(taskToSchedule) - DatacenterMetrics.MS_RESOURCE_THRESHOLD)
+                        : Math.abs(dcResources.getContainerResourceConsumption(ms.getId(), taskToSchedule.userRequest.type.id) - DatacenterMetrics.MS_RESOURCE_THRESHOLD)
         ).sum()
 
     }
@@ -116,13 +116,13 @@ class ObjectiveFunction {
     }
 
 
-    static double calculate(Task taskToSchedule, ContainerHost allocationCandidateHost) {
+    static Map calculate(Task taskToSchedule, ContainerHost allocationCandidateHost) {
 
         double td = calculateThresholdDistance(taskToSchedule)
         double cb = calculateBalancedClusterUse(taskToSchedule, allocationCandidateHost)
         double sf = 0//calculateSystemFailureRate(taskToSchedule)
         double tnd = calculateTotalNetworkDistance(taskToSchedule, allocationCandidateHost)
-        return td + cb + sf + tnd
+        return [thresholdDistance: td, clusterCalance:  cb, seyctemFailureRate: sf, totalNetworkDistance: tnd]
     }
 
 }

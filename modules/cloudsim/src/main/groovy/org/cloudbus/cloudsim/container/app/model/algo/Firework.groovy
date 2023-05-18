@@ -35,7 +35,7 @@ class Firework {
 
     void calculateFitness(Task taskToSchedule) {
         ContainerHost allocationCandidateHost = hostsToSearch.get(position)
-        double fitness = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost)
+        double fitness = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum()
         this.fitnessValue = fitness
         calculateSparkFitness(taskToSchedule)
     }

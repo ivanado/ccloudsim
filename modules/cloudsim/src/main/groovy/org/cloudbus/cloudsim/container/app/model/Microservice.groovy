@@ -38,7 +38,7 @@ class Microservice {
 
 
     double getResourceConsumption() {
-        return (double) requiredPes / DatacenterResources.MAX_HOST_PES
+        return (double) requiredPes / DatacenterMetrics.MAX_HOST_PES
     }
 
     @Override

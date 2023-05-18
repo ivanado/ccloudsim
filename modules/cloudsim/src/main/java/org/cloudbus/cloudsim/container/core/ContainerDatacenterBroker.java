@@ -1,7 +1,7 @@
 package org.cloudbus.cloudsim.container.core;
 
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.schedulers.UserRequestScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -19,7 +19,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
     public UserRequestScheduler taskScheduler;
 
-    private final DatacenterResources dcResources = DatacenterResources.get();
+    private final DatacenterMetrics dcResources = DatacenterMetrics.get();
 
     public ContainerDatacenterBroker(String name) {
         super(name);

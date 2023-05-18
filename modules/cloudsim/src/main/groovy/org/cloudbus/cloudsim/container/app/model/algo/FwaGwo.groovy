@@ -1,5 +1,6 @@
 package org.cloudbus.cloudsim.container.app.model.algo
 
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.container.utils.IDs
@@ -68,6 +69,9 @@ class FwaGwo {
             packs.forEach(p->p.rank())
             i++
         }
+
+        GreyWolf best = packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}
+        DatacenterMetrics.get().setBestObjectiveFunctionValues(best.objectives)
        return packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}.currentPosition
     }
 

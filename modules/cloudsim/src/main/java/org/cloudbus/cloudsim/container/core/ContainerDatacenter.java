@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.InfoPacket;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.resourceAllocators.ContainerAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -24,7 +24,7 @@ public class ContainerDatacenter extends SimEntity {
 
     private double lastProcessTime = 0;
 
-    private final DatacenterResources dcResources = DatacenterResources.get();
+    private final DatacenterMetrics dcResources = DatacenterMetrics.get();
 
     public ContainerDatacenter(String name, ContainerDatacenterCharacteristics characteristics, ContainerAllocationPolicy containerAllocationPolicy) {
         super(name);
@@ -274,8 +274,13 @@ public class ContainerDatacenter extends SimEntity {
         Log.printLine("========== DATACENTER " + getName() + " ==========");
         dcResources.getRunningHosts().forEach(containerHost -> {
             List<String> containers = containerHost.getContainerList().stream().map(container -> String.valueOf(container.getId())).toList();
-
-            String msg = "Host #" + containerHost.getId() + "\t AllPes=" + containerHost.getNumberOfPes() + " Host-FreePes=" + containerHost.getNumberOfFreePes() + " Scheduler-FreePes=" + containerAllocationPolicy.getFreePesForHost(containerHost.getId()) + " Containers=" + containers;
+            List<String> ms = containerHost.getContainerList().stream().map(c -> String.valueOf(c.getMicroserviceId())).toList();
+            String msg = "Host #" + containerHost.getId() +
+                    "\t AllPes=" + containerHost.getNumberOfPes() +
+                    " Host-FreePes=" + containerHost.getNumberOfFreePes() +
+                    " Scheduler-FreePes=" + containerAllocationPolicy.getFreePesForHost(containerHost.getId()) +
+                    " Containers=" + containers +
+                    " Microservices= " +ms;
             Log.printLine(msg);
         });
 

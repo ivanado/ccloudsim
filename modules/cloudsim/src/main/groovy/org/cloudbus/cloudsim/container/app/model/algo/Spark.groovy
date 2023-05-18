@@ -21,7 +21,7 @@ class Spark {
 
     void calculateFitness(Task taskToSchedule) {
         ContainerHost allocationCandidateHost = this.firework.hostsToSearch.get(position)
-        this.fitnessValue = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost)
+        this.fitnessValue = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum()
     }
 
     @Override

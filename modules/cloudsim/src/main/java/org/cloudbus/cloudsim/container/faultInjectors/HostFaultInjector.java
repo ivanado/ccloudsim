@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
@@ -24,7 +24,7 @@ public class HostFaultInjector extends SimEntity {
     @Setter
     private ContainerDatacenter datacenter;
     private final Map<ContainerHost, List<Double>> hostFailureTimes;
-    private DatacenterResources dcResources = DatacenterResources.get();
+    private DatacenterMetrics dcResources = DatacenterMetrics.get();
     private RandomDataGenerator  randomData;
     public HostFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerHostFaultInjector");
@@ -67,7 +67,7 @@ public class HostFaultInjector extends SimEntity {
 
     private void generateHostFaultAndScheduleNext() {
         try {
-            final ContainerHost host = DatacenterResources.get().getRandomHost();
+            final ContainerHost host = DatacenterMetrics.get().getRandomHost();
             if (host != null) {
                 injectHostFault(host);
                 scheduleHostRecovery(host);

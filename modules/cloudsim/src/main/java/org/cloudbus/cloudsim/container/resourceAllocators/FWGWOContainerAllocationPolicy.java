@@ -1,6 +1,6 @@
 package org.cloudbus.cloudsim.container.resourceAllocators;
 
-import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
@@ -63,7 +63,7 @@ public class FWGWOContainerAllocationPolicy extends ContainerAllocationPolicy {
 
     private ContainerHost getHost(Container containerToAllocate, List<ContainerHost> containerHostList) {
         List<ContainerHost> availableHosts = containerHostList.stream().filter(containerHost -> containerHost.getNumberOfFreePes() >= containerToAllocate.getNumberOfPes()).toList();
-        Task taskForContainer = DatacenterResources.get().getTask(containerToAllocate);
+        Task taskForContainer = DatacenterMetrics.get().getTask(containerToAllocate);
         return selectionPolicy.selectHost(availableHosts, taskForContainer);
     }
 
