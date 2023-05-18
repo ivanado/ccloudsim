@@ -19,14 +19,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-public class ContainerHostFaultInjector extends SimEntity {
+public class HostFaultInjector extends SimEntity {
     @Getter
     @Setter
     private ContainerDatacenter datacenter;
     private final Map<ContainerHost, List<Double>> hostFailureTimes;
     private DatacenterResources dcResources = DatacenterResources.get();
     private RandomDataGenerator  randomData;
-    public ContainerHostFaultInjector(final ContainerDatacenter datacenter) {
+    public HostFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerHostFaultInjector");
         this.setDatacenter(datacenter);
         this.hostFailureTimes = new HashMap<>();
