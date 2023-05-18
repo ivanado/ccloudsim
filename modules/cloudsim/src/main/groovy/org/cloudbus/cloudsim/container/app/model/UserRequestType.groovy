@@ -7,7 +7,7 @@ class UserRequestType {
 
     UserRequestType(int type) {
         this.id = type
-        this.msCallGraph = MicroserviceCallGraph.get().get(type)
+        this.msCallGraph = MicroserviceCallGraph.getByType().getByType(type)
 
     }
 
@@ -15,7 +15,7 @@ class UserRequestType {
         return this.msCallGraph.size()
     }
 
-    static UserRequestType getUserRequestTypeOne() {
+    static UserRequestType getUserRequestType() {
         return new UserRequestType(1)
     }
 }

@@ -10,7 +10,7 @@ class UserRequest {
 
     UserRequest(int brokerId) {
         this.id = IDs.pollId(UserRequest.class)
-        this.type = UserRequestType.getUserRequestTypeOne()
+        this.type = UserRequestType.getUserRequestType()
         this.tasks = new ArrayList<>()
         this.brokerId = brokerId
         initializeTasks()
@@ -19,16 +19,21 @@ class UserRequest {
 
     private void initializeTasks() {
         this.tasks = this.type.msCallGraph.collect { ms -> new Task(ms, this.brokerId, this) }
+        for(Task task: this.tasks){
+            for( Microservice p : task.microservice.providers){
+                task.setProvider(this.tasks.find {it.microservice.getId() == p.getId()})
+            }
+            for( Microservice c : task.microservice.consumers){
+                task.setConsumer(this.tasks.find {it.microservice.getId() == c.getId()})
+            }
+        }
+
     }
 
-
-    List<Task> getTasks(boolean noProvider) {
-
-        return this.tasks.findAll { task ->
-
-            return noProvider
-                    ? task.microservice.getProvider() == null
-                    : task.microservice.getProvider() != null
-        }
+    List<Task> getInitialReadyTasks(){
+        this.tasks.findAll {it.providers.isEmpty()}
+    }
+    List<Task> getInitialWaitingTasks(){
+        this.tasks.findAll {!it.providers.isEmpty()}
     }
 }

@@ -97,8 +97,8 @@ class ObjectiveFunction {
 
     private static double calculateServiceMeanDistance(Task taskToSchedule, ContainerHost allocationCandidateHost) {
         List<Container> containers = dcResources.microserviceRunningContainers.get(taskToSchedule.microservice.getId())?:[]
-        List<Container> providerContainers = taskToSchedule.microservice.getProvider() != null
-                ? dcResources.microserviceRunningContainers.get(taskToSchedule.microservice.getProvider().getId())
+        List<Container> providerContainers = !taskToSchedule.getProviders().isEmpty()
+                ? taskToSchedule.providers*.container
                 : []
         if (containers.isEmpty() || providerContainers.isEmpty()) {
             return 0.0

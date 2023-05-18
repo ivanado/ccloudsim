@@ -12,8 +12,10 @@ class Task {
     Microservice microservice
     ContainerCloudlet cloudlet
     Container container
-    Task provider
-    Task consumer
+//    Task provider
+//    Task consumer
+    List<Task> consumers = []
+    List<Task> providers = []
     UserRequest userRequest
     int id
 
@@ -23,20 +25,30 @@ class Task {
         this.cloudlet = new ContainerCloudlet(IDs.pollId(ContainerCloudlet.class), 1000, 10, 1, 1, new UtilizationModelFull(), new UtilizationModelNull(), new UtilizationModelNull())
         this.cloudlet.setUserId(brokerId)
         this.container = new Container(IDs.pollId(Container.class), microservice.getId(), brokerId, 10, 10, 0, 0, 0, "", new ContainerCloudletSchedulerSpaceShared(), 300)
-        this.provider = null
-        this.consumer = null
         this.userRequest = userRequest
     }
 
+    void setProvider(Task provider) {
+        providers.add(provider)
+    }
+
+
+    void setConsumer(Task consumer) {
+        consumers.add(consumer)
+    }
 
     @Override
     boolean equals(Object obj) {
         return this.id == ((Task) obj).id
     }
 
-
-    void set(Task provider, Task consumer) {
-        this.provider = provider
-        this.consumer = consumer
+    @Override
+    String toString() {
+        return "Task-$id"
     }
+//
+//    void set(Task provider, Task consumer) {
+//        this.providers.add(provider)
+//        this.consumers.add(consumer)
+//    }
 }

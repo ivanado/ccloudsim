@@ -5,7 +5,6 @@ import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.app.model.UserRequest;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
-import org.cloudbus.cloudsim.container.core.ContainerCloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
@@ -21,20 +20,28 @@ import java.util.stream.Collectors;
 
 public class UserRequestScheduler extends SimEntity {
 
+    public static final String NEW_LINE = "\n";
+    int MAX_CONCURRENT_USER_REQUESTS = 1;
+    private final List<UserRequest> allUserRequests;
     public int brokerId;
 
     public List<Task> finishedTasks;
     public List<Task> allTasks;
     public Queue<Task> taskQueue;
     public List<Task> waitingTasks;
+    public final Queue<UserRequest> userRequestQueue;
 
-    public UserRequestScheduler(String name, int brokerId) {
+    private int runningUserRequestCount = 0;
+
+    public UserRequestScheduler(String name, int brokerId, List<UserRequest> allUserRequests) {
         super(name);
         this.brokerId = brokerId;
         this.allTasks = new ArrayList<>();
         this.finishedTasks = new ArrayList<>();
         this.waitingTasks = new ArrayList<>();
         this.taskQueue = new LinkedList<>();
+        this.allUserRequests = allUserRequests;
+        this.userRequestQueue = new LinkedList<>(allUserRequests);
     }
 
     @Override
@@ -75,16 +82,21 @@ public class UserRequestScheduler extends SimEntity {
 
 
     private void enqueueUserRequestTasksAndScheduleNext() {
+        while (runningUserRequestCount < MAX_CONCURRENT_USER_REQUESTS && !userRequestQueue.isEmpty()) {
 
-        UserRequest testRequest = new UserRequest(brokerId);
-        DatacenterMetrics.get().addUserRequest(testRequest);
-        List<Task> userRequestTasks = testRequest.getTasks();
-        allTasks.addAll(userRequestTasks);
-        taskQueue.addAll(testRequest.getTasks(true));
-        waitingTasks.addAll(testRequest.getTasks(false));
+            UserRequest ur = userRequestQueue.poll();
+            DatacenterMetrics.get().addUserRequest(ur);
+            List<Task> userRequestTasks = ur.getTasks();
+            allTasks.addAll(userRequestTasks);
+            taskQueue.addAll(ur.getInitialReadyTasks());
+            waitingTasks.addAll(ur.getInitialWaitingTasks());
 
-        submitTasks();
-        if (allTasks.size() < 10) {
+            submitTasks();
+            runningUserRequestCount++;
+        }
+
+
+        if (!userRequestQueue.isEmpty()) {
             scheduleNextUserRequest();
         }
     }
@@ -100,12 +112,12 @@ public class UserRequestScheduler extends SimEntity {
 
     private void printQueues() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n=======SCHEDULER QUEUES=======").append("\n");
-        sb.append("All tasks list: ").append(allTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
-        sb.append("Waiting tasks queue: ").append(waitingTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
-        sb.append("Finished tasks list: ").append(finishedTasks.stream().map(t  -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
-        sb.append("Tasks queue: ").append(taskQueue.stream().map(t  -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append("\n");
-        sb.append("=============================").append("\n");
+        sb.append("\n=======SCHEDULER QUEUES=======").append(NEW_LINE);
+        sb.append("All tasks list: ").append(allTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
+        sb.append("Waiting tasks queue: ").append(waitingTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
+        sb.append("Finished tasks list: ").append(finishedTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
+        sb.append("Tasks queue: ").append(taskQueue.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
+        sb.append("=============================").append(NEW_LINE);
         Log.print(sb.toString());
     }
 
@@ -113,9 +125,9 @@ public class UserRequestScheduler extends SimEntity {
         Task finishedTask = (Task) ev.getData();
         finishedTasks.add(finishedTask);
 
-        int finishedTaskMicroserviceId=finishedTask.getMicroservice().getId();
+        int finishedTaskMicroserviceId = finishedTask.getMicroservice().getId();
+        List<Task> tasksReady =   finishedTask.getConsumers();
         //if consumer tasks exist in waitingList move to taskQueue
-        List<Task> tasksReady = waitingTasks.stream().filter(task -> task.getMicroservice().getProvider().getId() == finishedTaskMicroserviceId).toList();
         if (!tasksReady.isEmpty()) {
             taskQueue.addAll(tasksReady);
             waitingTasks.removeAll(tasksReady);
@@ -123,6 +135,7 @@ public class UserRequestScheduler extends SimEntity {
             submitTasks();
         }
         if (allTasksProcessed()) {
+            runningUserRequestCount--;
             sendNow(getId(), ContainerCloudSimTags.USER_REQUEST_RETURN);
         }
     }
@@ -143,36 +156,25 @@ public class UserRequestScheduler extends SimEntity {
 
     public void printTasksReport() {
         StringBuilder sb = new StringBuilder();
-        String indent = "    ";
-        sb.append("\n");
-        sb.append("========== OUTPUT ==========").append("\n");
-        sb.append("Cloudlet ID" + indent + "STATUS" + indent
-                + "Data center ID" + indent + "ContainerId" + indent + "Time" + indent
-                + "Start Time" + indent + "Finish Time\n");
+        sb.append(NEW_LINE);
+        sb.append("============================================================= OUTPUT ======================================================================================").append(NEW_LINE);
+        sb.append(String.format("%20s %20s %20s %20s %20s %20s %20s ", "Cloudlet ID", "STATUS", "Data center ID", "ContainerId", "Time", "Start Time", "Finish Time")).append(NEW_LINE);
 
         DecimalFormat dft = new DecimalFormat("###.##");
 
 
         for (Task task : allTasks) {
-            sb.append(indent + task.getCloudlet().getCloudletId() + indent + indent);
-
-
-            sb.append(task.getCloudlet().getCloudletStatusString());
-            sb.append(indent + indent + task.getCloudlet().getResourceId()
-                    + indent + indent + task.getContainer().getId()
-                    + indent + indent
-                    + dft.format(task.getCloudlet().getActualCPUTime()) + indent
-                    + indent + dft.format(task.getCloudlet().getExecStartTime())
-                    + indent + indent
-                    + dft.format(task.getCloudlet().getFinishTime())).append("\n");
+            sb.append(String.format("%20s %20s %20s %20s %20s %20s %20s ",
+                    task.getCloudlet().getCloudletId(),
+                    task.getCloudlet().getCloudletStatusString(),
+                    task.getCloudlet().getResourceId(),
+                    task.getContainer().getId(),
+                    dft.format(task.getCloudlet().getActualCPUTime()),
+                    dft.format(task.getCloudlet().getExecStartTime()),
+                    dft.format(task.getCloudlet().getFinishTime()))).append(NEW_LINE);
 
 
         }
         Log.printLine(sb.toString());
-    }
-
-
-    public Task getTaskForCloudlet(ContainerCloudlet cloudlet) {
-        return allTasks.stream().filter(t -> t.getCloudlet().getCloudletId() == cloudlet.getCloudletId()).findFirst().orElse(null);
     }
 }

@@ -3,28 +3,35 @@ package org.cloudbus.cloudsim.container.app.model
 
 class MicroserviceCallGraph {
 
-    Microservice ms1 = new Microservice("A", 15)
-    Microservice ms2 = new Microservice("B", 15)
-    Microservice ms3 = new Microservice("D", 15)
+    Microservice ms1 = new Microservice( 15)
+    Microservice ms2 = new Microservice( 15)
+    Microservice ms3 = new Microservice( 15)
+    Microservice ms4 = new Microservice( 15)
+    Microservice ms5 = new Microservice( 15)
+    Microservice ms6 = new Microservice( 15)
 
     private MicroserviceCallGraph() {
         ms2.setProvider(ms1)
-        ms1.setConsumer(ms2)
-        ms3.setProvider(ms2)
+        ms3.setProvider(ms1)
+        ms4.setProvider(ms2)
+        ms5.setProvider(ms2)
+        ms5.setProvider(ms3)
+        ms6.setProvider(ms4)
+        ms6.setProvider(ms5)
     }
 
-    List<Microservice> get(int userRequestType) {
+    List<Microservice> getByType(int userRequestType) {
 
 
-        return List.of(ms1, ms2, ms3)
+        return List.of(ms1, ms2, ms3, ms4, ms5, ms6)
     }
     static MicroserviceCallGraph instance = null
 
-    static MicroserviceCallGraph get() {
-        if (this.instance == null) {
-            this.instance = new MicroserviceCallGraph()
+    static MicroserviceCallGraph getByType() {
+        if (instance == null) {
+            instance = new MicroserviceCallGraph()
         }
-        return this.instance
+        return instance
     }
 
 }

@@ -10,7 +10,7 @@ import java.util.List;
 public class FwGwoHostSelectionPolicy {
 
     public ContainerHost selectHost(List<ContainerHost> hosts, Task task){
-        ContainerHost selectedHost= new FwaGwo(2,hosts).run(task);
+        ContainerHost selectedHost= new FwaGwo(1,hosts).run(task);
         Log.printLine("Selected host # ", selectedHost.toString());
         return selectedHost;
     }

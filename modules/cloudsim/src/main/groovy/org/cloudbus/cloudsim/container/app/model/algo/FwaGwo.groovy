@@ -7,6 +7,7 @@ import org.cloudbus.cloudsim.container.utils.IDs
 import org.cloudbus.cloudsim.util.MathUtil
 
 class FwaGwo {
+    public static final String COMMA = ","
     List<Firework> fireworks
     Map<Firework, Double> fireworkFitness
     double bestFitness
@@ -24,7 +25,6 @@ class FwaGwo {
         initFireworks(numberOfPacks, allHosts)
         initPacks(numberOfPacks, wolvesPerPack, allHosts)
 
-        //initt pks
         this.packs.eachWithIndex{ Pack p, int i -> p.firework = this.fireworks.get(i)}
 
     }
@@ -59,7 +59,7 @@ class FwaGwo {
             pack.initialRankAndPositionWolves()
         })
         StringBuilder sb = new StringBuilder() //output objective function value per iteration
-        sb.append("#iteration thresholdDistance clusterBalance systemFailureRate totalNetworkDistance objectiveFunction\n")
+        sb.append("iteration,thresholdDistance,clusterBalance,systemFailureRate,totalNetworkDistance,objectiveFunction\n")
         int maxIterations = 10
         int i = 0
         double a
@@ -69,16 +69,16 @@ class FwaGwo {
             packs.forEach(p-> p.calculateFitness(task))
             packs.forEach(p->p.rank())
             GreyWolf currentBest= packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}
-            sb.append(i).append(" ")
-            sb.append(currentBest.objectives["thresholdDistance"]).append(" ")
-            sb.append(currentBest.objectives["clusterBalance"]).append(" ")
-            sb.append(currentBest.objectives["systemFailureRate"]).append(" ")
-            sb.append(currentBest.objectives["totalNetworkDistance"]).append(" ")
-            sb.append(currentBest.objectives.values().sum()).append("\n ")
+            sb.append(i).append(COMMA)
+            sb.append(currentBest.objectives["thresholdDistance"]).append(COMMA)
+            sb.append(currentBest.objectives["clusterBalance"]).append(COMMA)
+            sb.append(currentBest.objectives["systemFailureRate"]).append(COMMA)
+            sb.append(currentBest.objectives["totalNetworkDistance"]).append(COMMA)
+            sb.append(currentBest.objectives.values().sum()).append("\n")
             i++
 
         }
-        File outputLog = new File ("FWGWO-iterations.log")
+        File outputLog = new File ("modules/cloudsim/build/FWGWO-iterations.log")
         outputLog.text = sb.toString()
 
         GreyWolf best = packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}
@@ -115,7 +115,7 @@ class FwaGwo {
             maxAmplitude = maxAmplitude < amplitude ? amplitude : maxAmplitude
             return firework.id % 2 == 0 ? 1 : 2
         } else {
-            double maximumExplosionAmplitude = MathUtil.min(firework.position, firework.upperBound - firework.position)
+            double maximumExplosionAmplitude = firework.upperBound
 
             double amplitude = maximumExplosionAmplitude * (firework.fitnessValue - bestFitness + Double.MIN_VALUE) / (fireworks.stream().mapToDouble(f -> f.fitnessValue - bestFitness).sum() + Double.MIN_VALUE)
             maxAmplitude = maxAmplitude < amplitude ? amplitude : maxAmplitude

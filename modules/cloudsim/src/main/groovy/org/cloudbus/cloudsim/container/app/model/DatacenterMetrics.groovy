@@ -38,7 +38,7 @@ class DatacenterMetrics {
     private DatacenterMetrics() {
         this.runningHosts = new ArrayList<>()
         this.failedHosts = new ArrayList<>()
-        this.allMicroservices = MicroserviceCallGraph.get().get(1)
+        this.allMicroservices = MicroserviceCallGraph.getByType().getByType(1)
         this.runningMicroservices = new ArrayList<>()
         this.runningMicroservicesHosts = new HashMap<>()
         this.microserviceRunningContainers = new HashMap<>()
@@ -206,11 +206,15 @@ class DatacenterMetrics {
     }
 
     Task getTask(ContainerCloudlet cloudlet) {
-        return allTasksByUserRequest.values().flatten().find { t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId() } as Task
+        return allTasksByUserRequest.values().flatten().find { Task t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId() } as Task
     }
 
     Task getTask(Container container) {
-        return allTasksByUserRequest.values().flatten().find { t -> t.container.getId() == container.getId() }
+        return allTasksByUserRequest.values().flatten().find { Task t -> t.container.getId() == container.getId() } as Task
+    }
+
+    Task getTask(int containerId) {
+        return allTasksByUserRequest.values().flatten().find { Task t -> t.container.getId() == containerId } as Task
     }
 
     void setBestObjectiveFunctionValues(Map map) {

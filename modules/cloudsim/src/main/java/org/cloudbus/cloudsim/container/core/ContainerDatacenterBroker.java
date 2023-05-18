@@ -3,7 +3,6 @@ package org.cloudbus.cloudsim.container.core;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
-import org.cloudbus.cloudsim.container.schedulers.UserRequestScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -14,16 +13,16 @@ import java.util.stream.Collectors;
 public class ContainerDatacenterBroker extends SimEntity {
 
 
+    private int taskSchedulerId;
     public Integer datacenterId;
     public ContainerDatacenterCharacteristics datacenterCharacteristics;
 
-    public UserRequestScheduler taskScheduler;
 
-    private final DatacenterMetrics dcResources = DatacenterMetrics.get();
+
+    private final DatacenterMetrics dcMetrics = DatacenterMetrics.get();
 
     public ContainerDatacenterBroker(String name) {
         super(name);
-        this.taskScheduler = new UserRequestScheduler("BM-TaskScheduler", getId());
     }
 
     @Override
@@ -57,7 +56,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
                 sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DC_LOG);
 //                ---->process the cloudlet on created container
-                Task processCloudletTask = dcResources.getRunningTasks().stream().filter(t -> t.getContainer().getId() == containerId).findFirst().orElse(null);
+                Task processCloudletTask = dcMetrics.getTask(containerId);
                 if (processCloudletTask != null) {
                     processCloudletTask.getCloudlet().setContainerId(containerId);
                     sendNow(datacenterId, CloudSimTags.CLOUDLET_SUBMIT, processCloudletTask);
@@ -69,7 +68,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
     private void processTaskSubmit(SimEvent ev) {
         Task task = (Task) ev.getData();
-        dcResources.startTask(task);
+        dcMetrics.startTask(task);
 
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_SUBMIT, task);
     }
@@ -89,20 +88,20 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
         Log.printLine(getName(), ": Cloudlet #", cloudlet.getCloudletId(),
-                " returned. finished Cloudlets = ", dcResources.getFinishedTasks().stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")), ", ", cloudlet.getCloudletId());
-        Task task = dcResources.getTask(cloudlet);
+                " returned. finished Cloudlets = ", dcMetrics.getFinishedTasks().stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")), ", ", cloudlet.getCloudletId());
+        Task task = dcMetrics.getTask(cloudlet);
         //deallocate the container used for cloudlet processing
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task.getContainer());
-        sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_RETURN, task);
-        dcResources.finishTask(task);
+        sendNow(taskSchedulerId, ContainerCloudSimTags.TASK_RETURN, task);
+        dcMetrics.finishTask(task);
 
 
-        if (dcResources.allTasksProcessed()) {
+        if (dcMetrics.allTasksProcessed()) {
             Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": All Cloudlets executed. Finishing...");
             clearDatacenters();
             finishExecution();
         } else { // some cloudlets haven't finished yet
-            if (dcResources.hasTasksToProcess()) {
+            if (dcMetrics.hasTasksToProcess()) {
                 // all the cloudlets sent finished. It means that some bount
                 // cloudlet is waiting its container to be created
                 //should never happen since the contains are allocated for specific cloudlet
@@ -142,8 +141,8 @@ public class ContainerDatacenterBroker extends SimEntity {
         Log.printLine(getName(), " is shutting down...");
     }
 
-    public void printCloudletReport() {
-        taskScheduler.printTasksReport();
-    }
 
+    public void bind(int taskSchedulerId) {
+        this.taskSchedulerId=taskSchedulerId;
+    }
 }

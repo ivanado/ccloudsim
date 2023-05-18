@@ -10,17 +10,18 @@ class Microservice {
     int id
     int requiredPes
 
-    Microservice consumer
+//    Microservice consumer
 
-    Microservice provider
+//    Microservice provider
+    List<Microservice> providers = []
+    List<Microservice> consumers = []
 
-
-    Microservice(String name, int requiredPes) {
+    Microservice(int requiredPes) {
         this.id = IDs.pollId(Microservice.class)
         this.requiredPes = requiredPes
-        this.name = name
-        this.provider = null
-        this.consumer = null
+        this.name = "ms-$id"
+//        this.provider = null
+//        this.consumer = null
     }
 
     @Override
@@ -28,15 +29,21 @@ class Microservice {
         return name
     }
 
-    boolean hasProvider() {
-        return provider != null
+    void setProvider(Microservice provider) {
+        providers.add(provider)
+        provider.setConsumer(this)
     }
 
-    boolean hasConsumer() {
-        return consumer != null
+    void setProviders(Microservice... ps) {
+        providers.addAll(ps.toList())
     }
 
-
+    void setConsumer(Microservice consumer){
+        consumers.add(consumer)
+    }
+    void setConsumers(Microservice... cs){
+        consumers.add(cs)
+    }
     double getResourceConsumption() {
         return (double) requiredPes / DatacenterMetrics.MAX_HOST_PES
     }
