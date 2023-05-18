@@ -389,23 +389,15 @@ public class ContainerHost {
 //        getContainerVmScheduler().deallocatePesForVm(containerVm);
 //    }
 
-    /**
-     * Returns the MIPS share of each Pe that is allocated to a given VM.
-     *
-     * @param containerVm the vm
-     * @return an array containing the amount of MIPS of each pe that is available to the VM
-     * @pre $none
-     * @post $none
-     */
-//    public List<Double> getAllocatedMipsForContainerVm(ContainerVm containerVm) {
+    //    public List<Double> getAllocatedMipsForContainerVm(ContainerVm containerVm) {
 //        //Log.printLine("Host: get allocated Pes for Vm:......" + containerVm.getId());
 //        return getContainerVmScheduler().getAllocatedMipsForContainerVm(containerVm);
 //    }
 
-    /**
-     * Gets the total allocated MIPS for a VM over all the PEs.
-     *
-     * @param containerVm the vm
+    /*
+      Gets the total allocated MIPS for a VM over all the PEs.
+
+      @param containerVm the vm
      * @return the allocated mips for vm
      */
 //    public double getTotalAllocatedMipsForContainerVm(ContainerVm containerVm) {
@@ -413,20 +405,15 @@ public class ContainerHost {
 //        return getContainerVmScheduler().getTotalAllocatedMipsForContainerVm(containerVm);
 //    }
 
-    /**
-     * Returns maximum available MIPS among all the PEs.
-     *
-     * @return max mips
-     */
-//    public double getMaxAvailableMips() {
+    //    public double getMaxAvailableMips() {
 //        //Log.printLine("Host: Maximum Available Pes:......");
 //        return getContainerVmScheduler().getMaxAvailableMips();
 //    }
 
-    /**
-     * Gets the free mips.
-     *
-     * @return the free mips
+    /*
+      Gets the free mips.
+
+      @return the free mips
      */
 //    public double getAvailableMips() {
 //        //Log.printLine("Host: Get available Mips");
@@ -769,6 +756,11 @@ public class ContainerHost {
 
     public boolean is(ContainerHost other) {
         return this.id == other.id;
+    }
+
+    @Override
+    public String toString() {
+        return "host-"+id;
     }
 }
 

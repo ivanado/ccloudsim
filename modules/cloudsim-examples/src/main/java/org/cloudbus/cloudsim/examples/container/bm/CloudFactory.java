@@ -2,12 +2,12 @@ package org.cloudbus.cloudsim.examples.container.bm;
 
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerBwProvisionerSimple;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
-import org.cloudbus.cloudsim.container.containerProvisioners.ContainerRamProvisionerSimple;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPeProvisionerSimple;
+import org.cloudbus.cloudsim.container.containerProvisioners.ContainerRamProvisionerSimple;
+import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenterCharacteristics;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
-import org.cloudbus.cloudsim.container.resourceAllocators.BMContainerAllocationPolicySimple;
-import org.cloudbus.cloudsim.container.core.ContainerDatacenter;
+import org.cloudbus.cloudsim.container.resourceAllocators.FWGWOContainerAllocationPolicy;
 import org.cloudbus.cloudsim.container.schedulers.ContainerSchedulerTimeSharedOverSubscription;
 import org.cloudbus.cloudsim.vmplus.util.Id;
 
@@ -50,7 +50,7 @@ public class CloudFactory {
         ContainerDatacenterCharacteristics characteristics = new ContainerDatacenterCharacteristics("x86", "Linux", "Xen",
                 hosts, 0.0, 0, 0,
                 0, 0);
-        return new ContainerDatacenter(name, characteristics, new BMContainerAllocationPolicySimple());
+        return new ContainerDatacenter(name, characteristics, new FWGWOContainerAllocationPolicy());
 
     }
 }

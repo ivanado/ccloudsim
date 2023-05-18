@@ -1,7 +1,10 @@
 package org.cloudbus.cloudsim.container.resourceAllocators;
 
+import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
+import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
+import org.cloudbus.cloudsim.container.hostSelectionPolicies.FwGwoHostSelectionPolicy;
 import org.cloudbus.cloudsim.container.lists.ContainerPeList;
 
 import java.util.ArrayList;
@@ -14,11 +17,14 @@ public class FWGWOContainerAllocationPolicy extends ContainerAllocationPolicy {
     public Map<String, Integer> containerUsedPes;
     private Map<String, ContainerHost> containerHostTable;
 
+    private FwGwoHostSelectionPolicy selectionPolicy;
 
-    public FWGWOContainerAllocationPolicy(List<ContainerHost> hosts) {
+
+    public FWGWOContainerAllocationPolicy() {
         this.freePes = new ArrayList<>();
         this.containerUsedPes = new HashMap<>();
         this.containerHostTable = new HashMap<>();
+        this.selectionPolicy = new FwGwoHostSelectionPolicy();
 
     }
 
@@ -30,7 +36,7 @@ public class FWGWOContainerAllocationPolicy extends ContainerAllocationPolicy {
         boolean result = false;
 
         if (!this.containerHostTable.containsKey(container.getUid())) {
-            ContainerHost containerHost = getHost(requiredPes, containerHostList);
+            ContainerHost containerHost = getHost(container, containerHostList);
             result = containerHost != null && containerHost.containerCreate(container);
 
             if (result) {
@@ -55,8 +61,10 @@ public class FWGWOContainerAllocationPolicy extends ContainerAllocationPolicy {
                 .findFirst().orElse(null);
     }
 
-    private ContainerHost getHost(int requiredPes, List<ContainerHost> containerHostList) {
-        return containerHostList.stream().filter(containerHost -> containerHost.getNumberOfFreePes() >= requiredPes).findFirst().orElse(null);
+    private ContainerHost getHost(Container containerToAllocate, List<ContainerHost> containerHostList) {
+        List<ContainerHost> availableHosts = containerHostList.stream().filter(containerHost -> containerHost.getNumberOfFreePes() >= containerToAllocate.getNumberOfPes()).toList();
+        Task taskForContainer = DatacenterResources.get().getTask(containerToAllocate);
+        return selectionPolicy.selectHost(availableHosts, taskForContainer);
     }
 
     @Override

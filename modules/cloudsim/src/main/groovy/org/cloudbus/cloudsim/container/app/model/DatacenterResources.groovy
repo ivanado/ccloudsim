@@ -38,7 +38,7 @@ class DatacenterResources {
     private DatacenterResources() {
         this.runningHosts = new ArrayList<>()
         this.failedHosts = new ArrayList<>()
-        this.allMicroservices = new ArrayList<>()
+        this.allMicroservices = MicroserviceCallGraph.get().get(1)
         this.runningMicroservices = new ArrayList<>()
         this.runningMicroservicesHosts = new HashMap<>()
         this.microserviceRunningContainers = new HashMap<>()
@@ -90,9 +90,9 @@ class DatacenterResources {
     double getContainerResourceConsumption(Task taskToSchedule) {
         int msId = taskToSchedule.getMicroservice().getId()
         int userRequestType = taskToSchedule.getUserRequest().getType().getId()
-        double noOfUserRequests = userRequestsByType.get(userRequestType).size()
+        double noOfUserRequests = userRequestsByType.get(userRequestType)?.size() ?: 0
         int userRequestMsCount = userRequestsByType.get(userRequestType).stream().findFirst().get().getType().getMicroserviceCount()
-        List<Container> msContainers = new ArrayList<>(microserviceRunningContainers.get(msId))
+        List<Container> msContainers = new ArrayList<>(microserviceRunningContainers.get(msId) ?: new ArrayList<Container>())
         msContainers.add(taskToSchedule.getContainer())
         int containerReplicaCount = msContainers == null ? 0 : msContainers.size()
         Microservice ms = getById(msId)
@@ -181,6 +181,7 @@ class DatacenterResources {
     def startTask(Task task) {
         List<Task> tasks = this.allTasksByUserRequest[task.userRequest.id] ?: []
         tasks.add(task)
+        this.allTasksByUserRequest[task.userRequest.id] = tasks
         this.runningTasks.add(task)
     }
 
@@ -205,6 +206,10 @@ class DatacenterResources {
     }
 
     Task getTask(ContainerCloudlet cloudlet) {
-        return runningTasks.find { t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId() }
+        return allTasksByUserRequest.values().flatten().find { t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId() } as Task
+    }
+
+    Task getTask(Container container) {
+        return allTasksByUserRequest.values().flatten().find { t -> t.container.getId() == container.getId() }
     }
 }

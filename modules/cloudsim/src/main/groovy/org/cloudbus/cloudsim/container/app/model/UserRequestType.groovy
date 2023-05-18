@@ -2,20 +2,20 @@ package org.cloudbus.cloudsim.container.app.model
 
 
 class UserRequestType {
-    int id;
-    List<Microservice> msCallGraph;
+    int id
+    List<Microservice> msCallGraph
 
     UserRequestType(int type) {
-        this.id = type;
-        this.msCallGraph = MicroserviceCallGraph.get(type);
+        this.id = type
+        this.msCallGraph = MicroserviceCallGraph.get().get(type)
 
     }
 
     int getMicroserviceCount() {
-        return this.msCallGraph.size();
+        return this.msCallGraph.size()
     }
 
     static UserRequestType getUserRequestTypeOne() {
-        return new UserRequestType(1);
+        return new UserRequestType(1)
     }
 }

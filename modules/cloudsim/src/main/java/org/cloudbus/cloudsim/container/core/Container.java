@@ -506,14 +506,11 @@ public class Container {
         return this.getHost() != null && this.getHost().getId() == other.getId();
     }
 
-    public int getNetworkDistance(Container other) {
-        if(other.getHost() == null){
-
-        }
+    public double getNetworkDistance(Container other) {
         return isOnSameHost(other) ? 0 : 1;
     }
 
-    public int getNetworkDistance(ContainerHost host) {
+    public double getNetworkDistance(ContainerHost host) {
         return isOnSameHost(host) ? 0 : 1;
     }
 }

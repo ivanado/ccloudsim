@@ -16,7 +16,7 @@ public class BMContainerCloudExample {
 
         CloudSim.init(1, Calendar.getInstance(), false);
 
-        List<ContainerHost> hosts = CloudFactory.createHosts(2);
+        List<ContainerHost> hosts = CloudFactory.createHosts(11);
 
         ContainerDatacenter datacenter = CloudFactory.createDatacenter("BM-DC", hosts);
         ContainerDatacenterBroker broker = new ContainerDatacenterBroker("BM-Broker");

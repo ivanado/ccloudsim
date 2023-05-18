@@ -1,6 +1,7 @@
 package org.cloudbus.cloudsim.container.schedulers;
 
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.container.app.model.DatacenterResources;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.app.model.UserRequest;
 import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
@@ -76,6 +77,7 @@ public class UserRequestScheduler extends SimEntity {
     private void enqueueUserRequestTasksAndScheduleNext() {
 
         UserRequest testRequest = new UserRequest(brokerId);
+        DatacenterResources.get().addUserRequest(testRequest);
         List<Task> userRequestTasks = testRequest.getTasks();
         allTasks.addAll(userRequestTasks);
         taskQueue.addAll(testRequest.getTasks(true));

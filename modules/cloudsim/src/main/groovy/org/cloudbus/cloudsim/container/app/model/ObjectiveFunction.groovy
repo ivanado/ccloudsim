@@ -96,10 +96,15 @@ class ObjectiveFunction {
     }
 
     private static double calculateServiceMeanDistance(Task taskToSchedule, ContainerHost allocationCandidateHost) {
-        List<Container> containers = dcResources.microserviceRunningContainers.get(taskToSchedule.microservice.getId())
-        List<Container> providerContainers = dcResources.microserviceRunningContainers.get(taskToSchedule.microservice.getProvider().getId())
+        List<Container> containers = dcResources.microserviceRunningContainers.get(taskToSchedule.microservice.getId())?:[]
+        List<Container> providerContainers = taskToSchedule.microservice.getProvider() != null
+                ? dcResources.microserviceRunningContainers.get(taskToSchedule.microservice.getProvider().getId())
+                : []
+        if (containers.isEmpty() || providerContainers.isEmpty()) {
+            return 0.0
+        }
 
-        double distance = containers.stream().mapToDouble(c -> providerContainers.stream().mapToInt(pc -> pc.getNetworkDistance(c)).sum()).sum()
+        double distance = containers.stream().mapToDouble(c -> providerContainers.stream().mapToDouble(pc -> pc.getNetworkDistance(c)).sum()).sum()
 
         distance += providerContainers.stream().mapToDouble(pc -> pc.getNetworkDistance(allocationCandidateHost)).sum()
 
@@ -115,7 +120,7 @@ class ObjectiveFunction {
 
         double td = calculateThresholdDistance(taskToSchedule)
         double cb = calculateBalancedClusterUse(taskToSchedule, allocationCandidateHost)
-        double sf = calculateSystemFailureRate(taskToSchedule)
+        double sf = 0//calculateSystemFailureRate(taskToSchedule)
         double tnd = calculateTotalNetworkDistance(taskToSchedule, allocationCandidateHost)
         return td + cb + sf + tnd
     }

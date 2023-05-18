@@ -6,18 +6,27 @@ import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.container.utils.IDs
 
 class GreyWolf {
-    int id = IDs.pollId(GreyWolf.class);
+    int id
 
-    Rank rank = Rank.OMEGA;
+    Rank rank
 
-    ContainerHost currentPosition = null;
+    ContainerHost currentPosition = null
 
-    int currentPositionIndex = -1;
-    double fitnessValue = -1;
+    int currentPositionIndex = -1
+    double fitnessValue = -1
 
+    GreyWolf() {
+        this.id = IDs.pollId(GreyWolf.class)
+        this.rank = Rank.OMEGA
+    }
 
     def calculateFitnessFunctionValue(Task taskToSchedule) {
         //calculate all metrics for a microservice being deployed in a new container on the currentPositionHost
-        this.fitnessValue = ObjectiveFunction.calculate(taskToSchedule, currentPosition);
+        this.fitnessValue = ObjectiveFunction.calculate(taskToSchedule, currentPosition)
+    }
+
+    @Override
+    String toString() {
+        return "$rank wolf-$id---$fitnessValue"
     }
 }

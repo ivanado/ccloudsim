@@ -83,7 +83,11 @@ public final class IDs {
 
         return result;
     }
+    public static synchronized void resetGwo() {
+                 COUNTERS.put(GreyWolf.class, 1);
+                 COUNTERS.put(Pack.class, 1);
 
+    }
     private static synchronized int pollGlobalId() {
         return globalCounter++;
     }
