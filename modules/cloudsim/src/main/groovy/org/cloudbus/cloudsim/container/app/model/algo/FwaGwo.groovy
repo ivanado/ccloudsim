@@ -58,7 +58,8 @@ class FwaGwo {
         packs.forEach(pack -> {
             pack.initialRankAndPositionWolves()
         })
-
+        StringBuilder sb = new StringBuilder() //output objective function value per iteration
+        sb.append("#iteration thresholdDistance clusterBalance systemFailureRate totalNetworkDistance objectiveFunction\n")
         int maxIterations = 10
         int i = 0
         double a
@@ -67,8 +68,18 @@ class FwaGwo {
             packs.forEach(p -> p.updatePositions(a))
             packs.forEach(p-> p.calculateFitness(task))
             packs.forEach(p->p.rank())
+            GreyWolf currentBest= packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}
+            sb.append(i).append(" ")
+            sb.append(currentBest.objectives["thresholdDistance"]).append(" ")
+            sb.append(currentBest.objectives["clusterBalance"]).append(" ")
+            sb.append(currentBest.objectives["systemFailureRate"]).append(" ")
+            sb.append(currentBest.objectives["totalNetworkDistance"]).append(" ")
+            sb.append(currentBest.objectives.values().sum()).append("\n ")
             i++
+
         }
+        File outputLog = new File ("FWGWO-iterations.log")
+        outputLog.text = sb.toString()
 
         GreyWolf best = packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}
         DatacenterMetrics.get().setBestObjectiveFunctionValues(best.objectives)

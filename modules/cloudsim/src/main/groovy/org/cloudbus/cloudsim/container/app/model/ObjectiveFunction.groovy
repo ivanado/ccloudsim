@@ -122,7 +122,7 @@ class ObjectiveFunction {
         double cb = calculateBalancedClusterUse(taskToSchedule, allocationCandidateHost)
         double sf = 0//calculateSystemFailureRate(taskToSchedule)
         double tnd = calculateTotalNetworkDistance(taskToSchedule, allocationCandidateHost)
-        return [thresholdDistance: td, clusterCalance:  cb, seyctemFailureRate: sf, totalNetworkDistance: tnd]
+        return [thresholdDistance: td, clusterBalance:  cb, systemFailureRate: sf, totalNetworkDistance: tnd]
     }
 
 }
