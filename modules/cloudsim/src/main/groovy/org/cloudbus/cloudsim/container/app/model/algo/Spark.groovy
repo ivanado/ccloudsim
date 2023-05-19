@@ -7,10 +7,10 @@ import org.cloudbus.cloudsim.container.utils.IDs
 
 class Spark {
     int id
-    int position
     Firework firework
 
     double fitnessValue
+    int position
 
     Spark(int position, Firework firework) {
         this.id = IDs.pollId(Spark.class)
@@ -21,7 +21,7 @@ class Spark {
 
     void calculateFitness(Task taskToSchedule) {
         ContainerHost allocationCandidateHost = this.firework.hostsToSearch.get(position)
-        this.fitnessValue = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum()
+        this.fitnessValue = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum() as Double
     }
 
     @Override

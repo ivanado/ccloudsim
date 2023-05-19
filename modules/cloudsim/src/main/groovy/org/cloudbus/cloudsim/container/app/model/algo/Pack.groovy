@@ -6,82 +6,85 @@ import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.container.utils.IDs
 
 class Pack {
-    Firework firework;
-    int id;
-    int noOfWolves;
-    List<GreyWolf> greyWolves;
-    List<ContainerHost> hostsToSearch; //subset of all hosts
-    private int initialFireworkLocationIdx;
-    private double r
+    Firework firework
+    int id
+    int noOfWolves
+    List<GreyWolf> wolves
+    List<ContainerHost> hostsToSearch //subset of all hosts
+    private double r1
+    private double r2
 
-    private double distance;
+    private double distance
 
-    GreyWolf getByRank(Rank rank) {
-        this.greyWolves.find { it.rank == rank }
+    GreyWolf getWolfByRank(Rank rank) {
+        this.wolves.find { it.rank == rank }
     }
 
     Pack(int noOfWolves, Firework firework) {
-        this.id = IDs.pollId(Pack.class);
-        this.distance = -1;
-        this.noOfWolves = noOfWolves;
-        this.hostsToSearch = firework.hostsToSearch;
-        this.firework = firework;
-        this.greyWolves = new ArrayList<>();
-        for (int i = 0; i < noOfWolves; i++) {
-            this.greyWolves.add(new GreyWolf());
-        }
-        this.initialFireworkLocationIdx = firework.position;
-        this.r = Math.random()
-        Log.printLine("Pack #", id," created with ",noOfWolves, " wolwes")
+        this.id = IDs.pollId(Pack.class)
+        this.distance = -1
+        this.noOfWolves = noOfWolves
+        this.hostsToSearch = firework.hostsToSearch
+        this.firework = firework
+        this.wolves = new ArrayList<>()
+
+        this.r1 = Math.random().round()
+        this.r2 = Math.random()
+
+        createWolvesWithInitialPositionAndRank()
+        Log.printLine("Pack #", id, " created with ", noOfWolves, " wolves")
     }
 
-
-    void initialRankAndPositionWolves() {
-        List<Spark> bestSparks = firework.getBestSparks(noOfWolves, null);
-        for (int i = 0; i < this.greyWolves.size(); i++) {
-            Spark spark = bestSparks.get(i);
-            GreyWolf gw = this.greyWolves.get(i);
-            gw.rank = Rank.getRank( i + 1 < 5 ? i + 1 : 4)
-            gw.currentPositionIndex = spark.position;
-            gw.currentPosition = hostsToSearch.get(gw.currentPositionIndex);
-//            Log.printLine("Pack#$id updatePosition for gw#$gw.id to $gw.currentPositionIndex")
-
+    void createWolvesWithInitialPositionAndRank() {
+        for (int i = 0; i < noOfWolves; i++) {
+            Spark s = this.firework.bestSparks.get(i)
+            GreyWolf gw = new GreyWolf(currentPosition: s.position, currentHostCandidate: hostsToSearch.get(s.position), rank: Rank.getRank(i + 1), fitnessValue: s.fitnessValue)
+            this.wolves.add(gw)
         }
     }
 
     void updatePositions(double a) {
+
         double amplitude = this.firework.normalizedAmplitude
-        double E = 1 * a - r;
+        double E = 2 * a * r1
+        double C = amplitude * r2
+        for (GreyWolf currentWolf : this.wolves) {
+            int newPosition = calculateNewPosition(C, currentWolf, E)
 
-        for (GreyWolf greyWolf : this.greyWolves) {
-            double distanceAlpha = amplitude * r * Math.abs(getByRank(Rank.ALPHA).currentPositionIndex - greyWolf.currentPositionIndex)
-            double distanceBeta = amplitude * r * Math.abs(getByRank(Rank.BETA).currentPositionIndex - greyWolf.currentPositionIndex)
-            double distanceDelta = amplitude * r*Math.abs(getByRank(Rank.DELTA).currentPositionIndex - greyWolf.currentPositionIndex)
-            double X1 = Math.abs(getByRank(Rank.ALPHA).currentPositionIndex - E * distanceAlpha)
-            double X2 = Math.abs(getByRank(Rank.BETA).currentPositionIndex - E * distanceBeta)
-            double X3 = Math.abs(getByRank(Rank.DELTA).currentPositionIndex - E * distanceDelta)
-            int newPosition = (int) (X1 + X2 + X3) / 3;
+            int oldPosition = currentWolf.currentPosition
+            int normalizedNewPosition = Math.abs(newPosition % (hostsToSearch.size() - 1))
 
-            greyWolf.currentPositionIndex = newPosition % (hostsToSearch.size() - 1)
-            greyWolf.currentPosition = hostsToSearch.get(greyWolf.currentPositionIndex)
-//            Log.printLine("Pack#$id  updatePosition for gw#$greyWolf.id to $greyWolf.currentPositionIndex")
+            currentWolf.currentPosition = normalizedNewPosition
+            currentWolf.currentHostCandidate = hostsToSearch.get(currentWolf.currentPosition)
+//            Log.printLine("Pack#$id ", "\tupdatePosition for gw#$currentWolf.id from $oldPosition to $currentWolf.currentPosition", "\t (hostCandidate = $currentWolf.currentHostCandidate)")
 
         }
+//        Log.print(NEW_LINE)
+
+    }
+
+    private int calculateNewPosition(double C, GreyWolf currentWolf, double E) {
+        double distanceAlpha = C * getWolfByRank(Rank.ALPHA).currentPosition - currentWolf.currentPosition
+        double distanceBeta = C * getWolfByRank(Rank.BETA).currentPosition - currentWolf.currentPosition
+        double distanceDelta = C * getWolfByRank(Rank.DELTA).currentPosition - currentWolf.currentPosition
+        double X1 = getWolfByRank(Rank.ALPHA).currentPosition - E * distanceAlpha
+        double X2 = getWolfByRank(Rank.BETA).currentPosition - E * distanceBeta
+        double X3 = getWolfByRank(Rank.DELTA).currentPosition - E * distanceDelta
+        int newPosition = (int) (X1 + X2 + X3) / 3
+        newPosition
     }
 
     void calculateFitness(Task taskToSchedule) {
-        for (GreyWolf greyWolf : greyWolves) {
+        for (GreyWolf greyWolf : wolves) {
             greyWolf.calculateFitnessFunctionValue(taskToSchedule)
         }
     }
 
-    void rank() {
-        greyWolves.sort { it.fitnessValue }
-        greyWolves.get(0).setRank(Rank.ALPHA)
-        greyWolves.get(1).setRank(Rank.BETA)
-        greyWolves.get(2).setRank(Rank.DELTA)
-        for (int i = 3; i < greyWolves.size(); i++) {
-            greyWolves.get(i).setRank(Rank.OMEGA)
+    void rankWolves() {
+        wolves.sort { it.fitnessValue }
+        for (int i = 0; i < wolves.size(); i++) {
+            Rank rankToSet = i < 3 ? Rank.getRank(i + 1) : Rank.OMEGA
+            wolves.get(i).setRank(rankToSet)
         }
     }
 

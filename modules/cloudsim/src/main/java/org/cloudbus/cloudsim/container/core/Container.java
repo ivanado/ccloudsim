@@ -19,7 +19,7 @@ public class Container {
     /**
      * The id.
      */
-    @Setter(AccessLevel.PROTECTED)
+    @Setter(AccessLevel.PUBLIC)
     @Getter
     private int id;
 

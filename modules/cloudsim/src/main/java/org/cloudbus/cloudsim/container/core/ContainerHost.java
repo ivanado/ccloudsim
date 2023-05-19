@@ -87,13 +87,7 @@ public class ContainerHost {
      * @param peList                  the pe list
      * @param containerScheduler      the  scheduler
      */
-    public ContainerHost(
-            int id,
-            ContainerRamProvisioner containerRamProvisioner,
-            ContainerBwProvisioner containerBwProvisioner,
-            long storage,
-            List<? extends ContainerPe> peList,
-            ContainerScheduler containerScheduler) {
+    public ContainerHost(int id, ContainerRamProvisioner containerRamProvisioner, ContainerBwProvisioner containerBwProvisioner, long storage, List<? extends ContainerPe> peList, ContainerScheduler containerScheduler) {
         setId(id);
         setContainerRamProvisioner(containerRamProvisioner);
         setContainerBwProvisioner(containerBwProvisioner);
@@ -209,10 +203,7 @@ public class ContainerHost {
      */
     public boolean isSuitableForContainer(Container container) {
         //Log.printLine("Host: Is suitable for Container???......");
-        return (containerScheduler.getPeCapacity() >= container.getCurrentRequestedMaxMips()
-                && containerScheduler.getAvailableMips() >= container.getCurrentRequestedTotalMips()
-                && containerRamProvisioner.isSuitableForContainer(container, container.getCurrentRequestedRam()) && containerBwProvisioner
-                .isSuitableForContainer(container, container.getCurrentRequestedBw()));
+        return (containerScheduler.getPeCapacity() >= container.getCurrentRequestedMaxMips() && containerScheduler.getAvailableMips() >= container.getCurrentRequestedTotalMips() && containerRamProvisioner.isSuitableForContainer(container, container.getCurrentRequestedRam()) && containerBwProvisioner.isSuitableForContainer(container, container.getCurrentRequestedBw()));
     }
 
 //    /**
@@ -676,8 +667,7 @@ public class ContainerHost {
 //        }
 
         if (!getContainerScheduler().allocatePesForContainer(container, container.getCurrentRequestedMips())) {
-            Log.printLine("[ContainerScheduler.ContainerCreate] Allocation of Container #", container.getId(), " to host #", getId(),
-                    " failed by MIPS");
+            Log.printLine("[ContainerScheduler.ContainerCreate] Allocation of Container #", container.getId(), " to host #", getId(), " failed by MIPS");
             getContainerRamProvisioner().deallocateRamForContainer(container);
             getContainerBwProvisioner().deallocateBwForContainer(container);
             return false;
@@ -732,11 +722,7 @@ public class ContainerHost {
     }
 
     public Container getContainer(int containerId, int userId) {
-        return getContainerList()
-                .stream()
-                .filter(container -> container.getId() == containerId && container.getUserId() == userId)
-                .findFirst()
-                .orElse(null);
+        return getContainerList().stream().filter(container -> container.getId() == containerId && container.getUserId() == userId).findFirst().orElse(null);
     }
 
     public Set<Integer> getRunningMicroserviceIds() {
@@ -745,9 +731,7 @@ public class ContainerHost {
 
 
     public double getCapacity(int pesToAllocate) {
-        return pesToAllocate < getNumberOfPes()
-                ? (double) (getNumberOfFreePes() - pesToAllocate) / getNumberOfPes()
-                : 0;
+        return pesToAllocate <= getNumberOfFreePes() ? (double) (getNumberOfFreePes() - pesToAllocate) / getNumberOfPes() : 0;
     }
 
     public double getCapacity() {
@@ -760,7 +744,7 @@ public class ContainerHost {
 
     @Override
     public String toString() {
-        return "host-"+id;
+        return "host-" + id;
     }
 }
 

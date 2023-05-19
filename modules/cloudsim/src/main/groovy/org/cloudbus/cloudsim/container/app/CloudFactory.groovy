@@ -8,7 +8,7 @@ import org.cloudbus.cloudsim.container.containerProvisioners.ContainerRamProvisi
 import org.cloudbus.cloudsim.container.core.ContainerDatacenter
 import org.cloudbus.cloudsim.container.core.ContainerDatacenterCharacteristics
 import org.cloudbus.cloudsim.container.core.ContainerHost
-import org.cloudbus.cloudsim.container.resourceAllocators.FWGWOContainerAllocationPolicy
+import org.cloudbus.cloudsim.container.resourceAllocators.FwGwoContainerAllocationPolicy
 import org.cloudbus.cloudsim.container.schedulers.ContainerSchedulerTimeSharedOverSubscription
 import org.cloudbus.cloudsim.vmplus.util.Id
 
@@ -48,12 +48,8 @@ class CloudFactory {
             ContainerDatacenterCharacteristics characteristics = new ContainerDatacenterCharacteristics("x86", "Linux", "Xen",
                     hosts, 0.0, 0, 0,
                     0, 0)
-        return new ContainerDatacenter(name, characteristics, new FWGWOContainerAllocationPolicy())
+        return new ContainerDatacenter(name, characteristics, new FwGwoContainerAllocationPolicy())
 
     }
 
-
-    static List<UserRequest> prepareUserRequests(){
-
-    }
 }

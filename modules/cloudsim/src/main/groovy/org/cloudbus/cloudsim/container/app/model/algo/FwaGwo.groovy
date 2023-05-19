@@ -4,17 +4,14 @@ import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.container.utils.IDs
-import org.cloudbus.cloudsim.util.MathUtil
 
 class FwaGwo {
     public static final String COMMA = ","
     List<Firework> fireworks
-    Map<Firework, Double> fireworkFitness
     double bestFitness
     double worstFitness
 
     double maxSparks
-    private Map<Firework, List<Spark>> fireworkSparks
     private double maxAmplitude
 
     List<Pack> packs
@@ -25,7 +22,7 @@ class FwaGwo {
         initFireworks(numberOfPacks, allHosts)
         initPacks(numberOfPacks, wolvesPerPack, allHosts)
 
-        this.packs.eachWithIndex{ Pack p, int i -> p.firework = this.fireworks.get(i)}
+        this.packs.eachWithIndex { Pack p, int i -> p.firework = this.fireworks.get(i) }
 
     }
 
@@ -39,7 +36,6 @@ class FwaGwo {
 
     private void initFireworks(int numberOfPacks, List<ContainerHost> allHosts) {
         this.fireworks = new ArrayList<>()
-        this.fireworkSparks = new HashMap<>()
         int hostsPerFirework = allHosts.size() / numberOfPacks
         maxSparks = hostsPerFirework / 4D
         for (int i = 0; i < numberOfPacks; i++) {
@@ -64,11 +60,11 @@ class FwaGwo {
         int i = 0
         double a
         while (i < maxIterations) {
-            a = 2 - (double)i / maxIterations
+            a = 2 - (double) i / maxIterations
             packs.forEach(p -> p.updatePositions(a))
-            packs.forEach(p-> p.calculateFitness(task))
-            packs.forEach(p->p.rank())
-            GreyWolf currentBest= packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}
+            packs.forEach(p -> p.calculateFitness(task))
+            packs.forEach(p -> p.rankWolves())
+            GreyWolf currentBest = packs.collect { it.getWolfByRank(Rank.ALPHA) }.min { it.fitnessValue }
             sb.append(i).append(COMMA)
             sb.append(currentBest.objectives["thresholdDistance"]).append(COMMA)
             sb.append(currentBest.objectives["clusterBalance"]).append(COMMA)
@@ -78,28 +74,27 @@ class FwaGwo {
             i++
 
         }
-        File outputLog = new File ("modules/cloudsim/build/FWGWO-iterations.log")
+        File outputLog = new File("modules/cloudsim/build/FWGWO-iterations.log")
         outputLog.text = sb.toString()
 
-        GreyWolf best = packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}
+        GreyWolf best = packs.collect { it.getWolfByRank(Rank.ALPHA) }.min { it.fitnessValue }
         DatacenterMetrics.get().setBestObjectiveFunctionValues(best.objectives)
-       return packs.collect{it.getByRank(Rank.ALPHA)}.min {it.fitnessValue}.currentPosition
+        return packs.collect { it.getWolfByRank(Rank.ALPHA) }.min { it.fitnessValue }.currentHostCandidate
     }
 
     private void findBestSparks(Task task) {
         fireworks.forEach(f -> {
-            f.calculateFitness(task)
+            f.calculateFitnessValues(task)
 //            fireworkFitness.put(f, f.fitnessValue);
         })
-        this.worstFitness = fireworks.stream().mapToDouble(f -> f.fitnessValue).max().orElse(0)
-        this.bestFitness = fireworks.stream().mapToDouble(f -> f.fitnessValue).min().orElse(0)
+//        this.worstFitness = fireworks.stream().mapToDouble(f -> f.fwFitnessValue).max().orElse(0)
+        this.bestFitness = fireworks.collect{f -> f.fwFitnessValue}.min()
         fireworks.forEach(f -> {
             calculateNumberOfSparks(f)
             calculateAmplitude(f)
             f.generateSparks()
-            f.calculateFitness(task)
-            List<Spark> bestSparks = f.getBestSparks(wolvesPerPack, task)
-            this.fireworkSparks.put(f, bestSparks)
+            f.calculateFitnessValues(task)
+            List<Spark> bestSparks = f.selectBestSparks(wolvesPerPack, task)
         })
     }
 
@@ -117,7 +112,7 @@ class FwaGwo {
         } else {
             double maximumExplosionAmplitude = firework.upperBound
 
-            double amplitude = maximumExplosionAmplitude * (firework.fitnessValue - bestFitness + Double.MIN_VALUE) / (fireworks.stream().mapToDouble(f -> f.fitnessValue - bestFitness).sum() + Double.MIN_VALUE)
+            double amplitude = maximumExplosionAmplitude * (firework.fwFitnessValue - bestFitness + Double.MIN_VALUE) / (fireworks.stream().mapToDouble(f -> f.fwFitnessValue - bestFitness).sum() + Double.MIN_VALUE)
             maxAmplitude = maxAmplitude < amplitude ? amplitude : maxAmplitude
             double normalizedAmplitude = 2 * amplitude / maxAmplitude
             firework.setAmplitude(amplitude, normalizedAmplitude)
@@ -126,8 +121,8 @@ class FwaGwo {
     }
 
     private void calculateNumberOfSparks(Firework firework) {
-        int noOfSparks = (int) Math.round(maxSparks * (worstFitness - firework.fitnessValue + Double.MIN_VALUE) / (fireworks.stream().mapToDouble(f -> worstFitness - f.fitnessValue).sum() + Double.MIN_VALUE))
-        firework.setNumberOfSparks(wolvesPerPack)
+        int noOfSparks = (int) Math.round(maxSparks * (worstFitness - firework.fwFitnessValue + Double.MIN_VALUE) / (fireworks.stream().mapToDouble(f -> worstFitness - f.fwFitnessValue).sum() + Double.MIN_VALUE))
+        firework.setNumberOfSparks(wolvesPerPack + 2)
 
     }
 }

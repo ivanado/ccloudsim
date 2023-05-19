@@ -77,9 +77,9 @@ class DatacenterMetrics {
     }
 
 
-    double getContainerResourceConsumption(int msId, int userRequestType) {
-        double noOfUserRequests = (double) userRequestsByType.get(userRequestType).size()
-        int userRequestMsCount = userRequestsByType.get(userRequestType).stream().findFirst().get().getType().getMicroserviceCount()
+    double getContainerResourceConsumption(int msId, UserRequestType requestType) {
+        int noOfUserRequests = userRequestsByType.get(requestType.id)?.size() ?: 0
+        int userRequestMsCount = requestType.microserviceCount
         List msContainers = microserviceRunningContainers.get(msId)
         int containerReplicaCount = msContainers == null ? 0 : msContainers.size()
         Microservice ms = getById(msId)
@@ -91,9 +91,9 @@ class DatacenterMetrics {
         int msId = taskToSchedule.getMicroservice().getId()
         int userRequestType = taskToSchedule.getUserRequest().getType().getId()
         double noOfUserRequests = userRequestsByType.get(userRequestType)?.size() ?: 0
-        int userRequestMsCount = userRequestsByType.get(userRequestType).stream().findFirst().get().getType().getMicroserviceCount()
-        List<Container> msContainers = new ArrayList<>(microserviceRunningContainers.get(msId) ?: new ArrayList<Container>())
-        msContainers.add(taskToSchedule.getContainer())
+        int userRequestMsCount = taskToSchedule.userRequest.getMicroserviceCont()
+        List<Container> msContainers = new ArrayList<>(microserviceRunningContainers.get(msId) ?: [])
+        msContainers << taskToSchedule.getContainer()
         int containerReplicaCount = msContainers == null ? 0 : msContainers.size()
         Microservice ms = getById(msId)
 
@@ -101,7 +101,7 @@ class DatacenterMetrics {
     }
 
     Microservice getById(int msId) {
-        return allMicroservices.stream().filter(ms -> ms.getId() == msId).findFirst().orElse(null)
+        return allMicroservices.find { ms -> ms.getId() == msId }
     }
 
     double getHostFailureRate(ContainerHost host) {
@@ -219,5 +219,11 @@ class DatacenterMetrics {
 
     void setBestObjectiveFunctionValues(Map map) {
         this.bestObjectiveFunctionValues = map
+    }
+
+    Set<Microservice> getRunningMicroservices(Microservice msToSchedule) {
+        Set<Microservice> allMicroservices = new HashSet<>(runningMicroservices)
+        allMicroservices << msToSchedule
+        return allMicroservices
     }
 }

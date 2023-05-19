@@ -1,7 +1,10 @@
 package org.cloudbus.cloudsim.container.resourceAllocators;
 
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
+import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.core.Container;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
+import org.cloudbus.cloudsim.container.containerPlacementPolicies.FwGwoContainerPlacementPolicy;
 import org.cloudbus.cloudsim.container.lists.ContainerPeList;
 
 import java.util.ArrayList;
@@ -9,16 +12,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy {
+public class FwGwoContainerAllocationPolicy extends ContainerAllocationPolicy {
     public List<Integer> freePes;
     public Map<String, Integer> containerUsedPes;
-    private Map<String, ContainerHost> containerHostTable;
+    private final Map<String, ContainerHost> containerHostTable;
+
+    private final FwGwoContainerPlacementPolicy containerPlacementPolicy;
 
 
-    public BMContainerAllocationPolicySimple() {
+    public FwGwoContainerAllocationPolicy() {
         this.freePes = new ArrayList<>();
         this.containerUsedPes = new HashMap<>();
         this.containerHostTable = new HashMap<>();
+        this.containerPlacementPolicy = new FwGwoContainerPlacementPolicy();
 
     }
 
@@ -30,7 +36,7 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
         boolean result = false;
 
         if (!this.containerHostTable.containsKey(container.getUid())) {
-            ContainerHost containerHost = getHost(requiredPes, containerHostList);
+            ContainerHost containerHost = chooseHostForContainer(container, containerHostList);
             result = containerHost != null && containerHost.containerCreate(container);
 
             if (result) {
@@ -45,18 +51,12 @@ public class BMContainerAllocationPolicySimple extends ContainerAllocationPolicy
     }
 
 
-    private ContainerHost chooseHostForContainer(int requiredPes, List<ContainerHost> containerHostList) {
-        //----------->TODO plug in FWGWO here to choose the optimal host
 
-//       TODO host free pes never gets updated on container pe allocation (numberOfFreePes always max)
-        return containerHostList
-                .stream()
-                .filter(host -> host.getNumberOfFreePes() >= requiredPes)
-                .findFirst().orElse(null);
-    }
 
-    private ContainerHost getHost(int requiredPes, List<ContainerHost> containerHostList) {
-        return containerHostList.stream().filter(containerHost -> containerHost.getNumberOfFreePes() >= requiredPes).findFirst().orElse(null);
+    private ContainerHost chooseHostForContainer(Container containerToAllocate, List<ContainerHost> containerHostList) {
+        List<ContainerHost> availableHosts = containerHostList.stream().filter(containerHost -> containerHost.getNumberOfFreePes() >= containerToAllocate.getNumberOfPes()).toList();
+        Task taskForContainer = DatacenterMetrics.get().getTask(containerToAllocate);
+        return containerPlacementPolicy.getContainerHost(availableHosts, taskForContainer);
     }
 
     @Override

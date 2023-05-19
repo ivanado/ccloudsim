@@ -44,7 +44,7 @@ class Task {
 
     @Override
     String toString() {
-        return "Task-$id"
+        return "Task-$id [container #$container.id, cloudlet #$cloudlet.cloudletId]"
     }
 //
 //    void set(Task provider, Task consumer) {

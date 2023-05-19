@@ -14,29 +14,39 @@ class Firework {
     int position
     int lowerBound
     int upperBound
-    double fitnessValue
+    double fwFitnessValue
     double amplitude
-    List<Spark> sparks
+    List<Spark> sparks = []
     List<ContainerHost> hostsToSearch
     int numberOfSparks
-    double normalizedAmplitude
+    double normalizedAmplitude = 0
+    List<Integer> exploredPositions = []
+    List<Spark> bestSparks = []
 
-    Firework(List<ContainerHost> hostsToSearch) {
+
+    Firework(List<ContainerHost> hostsToSelect, int maxFwSparkCount) {
         this.id = IDs.pollId(Firework.class)
-
-        this.position = MathUtil.randomInt(upperBound)
-        this.fitnessValue = -1
-        this.hostsToSearch = hostsToSearch
+        this.upperBound = hostsToSelect.size() - 1
         this.lowerBound = 0
-        this.numberOfSparks = 0
-        this.upperBound = hostsToSearch.size() - 1
-        this.sparks = []
+        this.position = MathUtil.randomInt(upperBound)
+        this.hostsToSearch = hostsToSelect
+        this.fwFitnessValue = -1
+        this.numberOfSparks = maxFwSparkCount
+        this.amplitude = 0
+        this.normalizedAmplitude = 0
     }
 
-    void calculateFitness(Task taskToSchedule) {
+
+    List<Spark> getAllSparks() {
+        def l = new ArrayList(sparks)
+        l.add(new FwSpark(this))
+        return l
+    }
+
+    void calculateFitnessValues(Task taskToSchedule) {
         ContainerHost allocationCandidateHost = hostsToSearch.get(position)
-        double fitness = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum()
-        this.fitnessValue = fitness
+        double fitness = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum()  as Double
+        this.fwFitnessValue = fitness
         calculateSparkFitness(taskToSchedule)
     }
 
@@ -45,7 +55,7 @@ class Firework {
 
     }
 
-    List<Spark> generateSparks() {
+    void generateSparks() {
         List<Integer> positions = []
         List<Spark> sparks = new ArrayList()//spark is denoted only by oisition which isindex in hostlist
         for (int i = 0; i < numberOfSparks; i++) {
@@ -57,22 +67,45 @@ class Firework {
                 sparkPosition = Math.abs(sparkPosition + randomizedAmpl) % (hostsToSearch.size() - 1)
             }
             positions.add(sparkPosition)
+            exploredPositions.add(sparkPosition)
             sparks.add(new Spark(sparkPosition, this))
         }
         this.sparks = sparks
-        return sparks
     }
 
-    List<Spark> getBestSparks(int count, Task task) {
-        if (task != null) {
-            this.sparks.forEach(s -> s.calculateFitness(task))
-        }
-        List<Spark> bestSparks = this.sparks.sort { it.fitnessValue }.take(count)
+    List<Spark> selectBestSparks(Task taskToSchedule, int count) {
+        calculateFitnessValues(taskToSchedule)
+        bestSparks = getAllSparks().sort { it.fitnessValue }.take(count)
         return bestSparks
+
     }
+
+//
+//    private void findBestSparks(Task task) {
+//        fireworks.forEach(f -> {
+//            f.calculateFitnessValues(task)
+////            fireworkFitness.put(f, f.fitnessValue);
+//        })
+//        def fitnessValues = this.collect { [it.fwFitnessValue].addAll(it.sparks*.fitnessValue) }
+//        this.worstFitness = fitnessValues.max()
+//        this.bestFitness = fitnessValues.min()
+//            calculateAmplitudes(f)
+//            f.generateSparks()
+//            f.calculateFitnessValues(task)
+//            int wolvesPerPack =4
+//            List<Spark> bestSparks = f.getBestSparks(wolvesPerPack, task)
+//        })
+//    }
+//    List<Spark> getBestSparks(int sparkCount, Task task) {
+//        this.sparks.forEach(s -> s.calculateFitness(task))
+//
+//        List<Spark> bestSparks = this.sparks.sort { it.fitnessValue }.take(sparkCount)
+//        return bestSparks
+//    }
 
     void setAmplitude(double amplitude) {
         this.amplitude = amplitude
+        this.normalizedAmplitude = amplitude
     }
 
     void setAmplitude(double amplitude, double normalizedAmplitude) {
@@ -82,5 +115,11 @@ class Firework {
 
     void setNumberOfSparks(int noOfSparks) {
         this.numberOfSparks = noOfSparks
+    }
+
+    @Override
+    boolean equals(Object obj) {
+        Firework other = (Firework) obj
+        return other.id == id
     }
 }

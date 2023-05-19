@@ -1,6 +1,7 @@
 package org.cloudbus.cloudsim.container.schedulers;
 
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.container.app.PrintUtils;
 import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.app.model.UserRequest;
@@ -8,6 +9,7 @@ import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.vmplus.util.TextUtil;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -17,11 +19,12 @@ import java.util.Queue;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static org.cloudbus.cloudsim.vmplus.util.TextUtil.NEW_LINE;
+
 
 public class UserRequestScheduler extends SimEntity {
 
-    public static final String NEW_LINE = "\n";
-    int MAX_CONCURRENT_USER_REQUESTS = 1;
+    int MAX_CONCURRENT_USER_REQUESTS = 2;
     private final List<UserRequest> allUserRequests;
     public int brokerId;
 
@@ -112,7 +115,7 @@ public class UserRequestScheduler extends SimEntity {
 
     private void printQueues() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n=======SCHEDULER QUEUES=======").append(NEW_LINE);
+        sb.append("\n=======SCHEDULER QUEUES=======").append(TextUtil.NEW_LINE);
         sb.append("All tasks list: ").append(allTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
         sb.append("Waiting tasks queue: ").append(waitingTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
         sb.append("Finished tasks list: ").append(finishedTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
@@ -156,7 +159,7 @@ public class UserRequestScheduler extends SimEntity {
 
     public void printTasksReport() {
         StringBuilder sb = new StringBuilder();
-        sb.append(NEW_LINE);
+        sb.append(PrintUtils.NEW_LINE);
         sb.append("============================================================= OUTPUT ======================================================================================").append(NEW_LINE);
         sb.append(String.format("%20s %20s %20s %20s %20s %20s %20s ", "Cloudlet ID", "STATUS", "Data center ID", "ContainerId", "Time", "Start Time", "Finish Time")).append(NEW_LINE);
 
@@ -171,7 +174,7 @@ public class UserRequestScheduler extends SimEntity {
                     task.getContainer().getId(),
                     dft.format(task.getCloudlet().getActualCPUTime()),
                     dft.format(task.getCloudlet().getExecStartTime()),
-                    dft.format(task.getCloudlet().getFinishTime()))).append(NEW_LINE);
+                    dft.format(task.getCloudlet().getFinishTime()))).append(PrintUtils.NEW_LINE);
 
 
         }

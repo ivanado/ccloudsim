@@ -10,9 +10,9 @@ class GreyWolf {
 
     Rank rank
 
-    ContainerHost currentPosition = null
+    ContainerHost currentHostCandidate = null
 
-    int currentPositionIndex = -1
+    int currentPosition = -1
     double fitnessValue = -1
     Map objectives
 
@@ -23,12 +23,14 @@ class GreyWolf {
 
     def calculateFitnessFunctionValue(Task taskToSchedule) {
         //calculate all metrics for a microservice being deployed in a new container on the currentPositionHost
-        this.objectives = ObjectiveFunction.calculate(taskToSchedule, currentPosition)
-        this.fitnessValue = this.objectives.values().sum()
+        this.objectives = ObjectiveFunction.calculate(taskToSchedule, currentHostCandidate)
+        this.fitnessValue = this.objectives.values().sum() as Double
     }
+
+
 
     @Override
     String toString() {
-        return "$rank wolf-$id [position; $currentPosition, fitnessVal: $fitnessValue]"
+        return "$rank wolf-$id [position:$currentPosition, hostCandidate: $currentHostCandidate, fitnessVal: $fitnessValue]"
     }
 }

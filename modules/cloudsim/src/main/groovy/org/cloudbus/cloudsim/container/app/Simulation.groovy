@@ -11,27 +11,27 @@ import org.cloudbus.cloudsim.core.CloudSim
 class Simulation {
     static void main(String[] args) {
 
-        CloudSim.init(1, Calendar.getInstance(), false);
+        CloudSim.init(1, Calendar.getInstance(), false)
 
-        List<ContainerHost> hosts = CloudFactory.createHosts(20);
+        List<ContainerHost> hosts = CloudFactory.createHosts(10)
 
-        ContainerDatacenter datacenter = CloudFactory.createDatacenter("BM-DC", hosts);
-        ContainerDatacenterBroker broker = new ContainerDatacenterBroker("BM-Broker");
+        ContainerDatacenter datacenter = CloudFactory.createDatacenter("BM-DC", hosts)
+        ContainerDatacenterBroker broker = new ContainerDatacenterBroker("BM-Broker")
 
-        List<UserRequest> userRequests = [new UserRequest(broker.getId()), new UserRequest(broker.getId())]
+        List<UserRequest> userRequests = [new UserRequest(broker.getId()), new UserRequest(broker.getId()), new UserRequest(broker.getId())]
 
-        UserRequestScheduler taskScheduler = new UserRequestScheduler("BM-TaskScheduler", broker.getId(), userRequests);
-        broker.bind(taskScheduler.getId());
+        UserRequestScheduler taskScheduler = new UserRequestScheduler("BM-TaskScheduler", broker.getId(), userRequests)
+        broker.bind(taskScheduler.getId())
 //        ContainerHostFaultInjector hostFaultInjector = new ContainerHostFaultInjector(datacenter);
 //        ContainerFaultInjector containerFaultInjector = new ContainerFaultInjector(datacenter);
 
-        CloudSim.startSimulation();
+        CloudSim.startSimulation()
 
-        taskScheduler.printTasksReport();
+        taskScheduler.printTasksReport()
 
 
-        CloudSim.stopSimulation();
-        Log.printLine("finished!");
+        CloudSim.stopSimulation()
+        Log.printLine("finished!")
 
 
     }

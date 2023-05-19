@@ -36,4 +36,8 @@ class UserRequest {
     List<Task> getInitialWaitingTasks(){
         this.tasks.findAll {!it.providers.isEmpty()}
     }
+
+    int getMicroserviceCont(){
+        return this.type.msCallGraph.size()
+    }
 }
