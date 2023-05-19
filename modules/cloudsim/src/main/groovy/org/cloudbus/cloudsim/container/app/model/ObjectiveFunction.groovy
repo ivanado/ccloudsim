@@ -23,7 +23,6 @@ class ObjectiveFunction {
     private static double physicalMachineUsage(ContainerHost host, UserRequestType userRequestType) {
         Set<Integer> msIds = host.getRunningMicroserviceIds()
         double containersResourceConsumption = msIds.size() > 0 ? msIds.collect { msId -> dcMetrics.getContainerResourceConsumption(msId, userRequestType) }.sum() as Double : 0
-//        double containersResourceConsumption = MathUtil.sum(msIds.stream().map(msId -> dcResources.getContainerResourceConsumption(msId, userRequestType)).toList())
         return containersResourceConsumption / host.getCapacity()
 
     }
@@ -63,9 +62,6 @@ class ObjectiveFunction {
         List<Double> hostsFailureRate = hosts.collect { h -> dcMetrics.getHostFailureRate(h) + dcMetrics.getMicroserviceContainerFailureRate(microservice.getId()) }
         double serviceFailure = 1
         hostsFailureRate.forEach(hostFailureRate -> serviceFailure *= hostsFailureRate)
-//        return hosts.stream().mapToDouble(h ->
-//                dcMetrics.getHostFailureRate(h) + dcMetrics.getMicroserviceContainerFailureRate(microservice.getId())
-//        ).reduce(1, (a, b) -> a * b)
         return serviceFailure
     }
 
@@ -78,11 +74,6 @@ class ObjectiveFunction {
                     ? calculateServiceMeanDistance(taskToSchedule, allocationCandidateHost)
                     : calculateServiceMeanDistance(ms)
         }.sum() as Double
-//        return runningMicroservices.stream().mapToDouble(ms ->
-//                taskToSchedule.microservice.getId() == ms.getId()
-//                        ? calculateServiceMeanDistance(taskToSchedule, allocationCandidateHost)
-//                        : calculateServiceMeanDistance(ms)
-//        ).sum()
 
     }
 
@@ -115,10 +106,8 @@ class ObjectiveFunction {
             return 0.0
         }
 
-//        double distance = containers.stream().mapToDouble(c -> providerContainers.stream().mapToDouble(pc -> pc.getNetworkDistance(c)).sum()).sum()
         double distance = containers.collect { c -> providerContainers.collect { pc -> pc.getNetworkDistance(c) }.sum()   as Double }.sum()  as Double
 
-//        distance += providerContainers.stream().mapToDouble(pc -> pc.getNetworkDistance(allocationCandidateHost)).sum()
         distance += providerContainers.collect { pc -> pc.getNetworkDistance(allocationCandidateHost) }.sum()  as Double
 
         int containerCount = containers.size() + 1
