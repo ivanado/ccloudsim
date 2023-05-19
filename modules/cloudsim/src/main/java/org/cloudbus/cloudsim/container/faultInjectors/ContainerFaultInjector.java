@@ -1,6 +1,6 @@
 package org.cloudbus.cloudsim.container.faultInjectors;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.math3.random.RandomDataGenerator;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.core.Container;
@@ -22,11 +22,14 @@ public class ContainerFaultInjector extends SimEntity {
     private Map<Integer, List<Double>> microserviceContainerFailureTimes;
     private DatacenterMetrics dcResources;
 
+    private RandomDataGenerator randomData;
+
     public ContainerFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerFaultInjector");
         this.datacenter = datacenter;
         this.microserviceContainerFailureTimes = new HashMap<>();
         this.dcResources = DatacenterMetrics.get();
+        this.randomData =new RandomDataGenerator();
     }
 
     @Override
@@ -43,8 +46,7 @@ public class ContainerFaultInjector extends SimEntity {
     }
 
     private double getNextFaultDelay() {
-        PoissonDistribution poissonDistribution = new PoissonDistribution(100);
-        return poissonDistribution.sample();
+        return randomData.nextPoisson(1000);
     }
 
     @Override

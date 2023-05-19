@@ -1,7 +1,7 @@
 package org.cloudbus.cloudsim.container.schedulers;
 
+import org.apache.commons.math3.random.RandomDataGenerator;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.container.app.PrintUtils;
 import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.app.model.UserRequest;
@@ -9,7 +9,6 @@ import org.cloudbus.cloudsim.container.core.ContainerCloudSimTags;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.vmplus.util.TextUtil;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -25,7 +24,6 @@ import static org.cloudbus.cloudsim.vmplus.util.TextUtil.NEW_LINE;
 public class UserRequestScheduler extends SimEntity {
 
     int MAX_CONCURRENT_USER_REQUESTS = 2;
-    private final List<UserRequest> allUserRequests;
     public int brokerId;
 
     public List<Task> finishedTasks;
@@ -35,6 +33,8 @@ public class UserRequestScheduler extends SimEntity {
     public final Queue<UserRequest> userRequestQueue;
 
     private int runningUserRequestCount = 0;
+    private final DatacenterMetrics dcMetrics = DatacenterMetrics.get();
+
 
     public UserRequestScheduler(String name, int brokerId, List<UserRequest> allUserRequests) {
         super(name);
@@ -43,7 +43,6 @@ public class UserRequestScheduler extends SimEntity {
         this.finishedTasks = new ArrayList<>();
         this.waitingTasks = new ArrayList<>();
         this.taskQueue = new LinkedList<>();
-        this.allUserRequests = allUserRequests;
         this.userRequestQueue = new LinkedList<>(allUserRequests);
     }
 
@@ -67,6 +66,8 @@ public class UserRequestScheduler extends SimEntity {
     }
 
     private double getNextUserRequestDelay() {
+        final RandomDataGenerator randomDataGenerator = new RandomDataGenerator();
+        randomDataGenerator.reSeed(337337337);
         return Math.random() * 100;
     }
 
@@ -88,7 +89,8 @@ public class UserRequestScheduler extends SimEntity {
         while (runningUserRequestCount < MAX_CONCURRENT_USER_REQUESTS && !userRequestQueue.isEmpty()) {
 
             UserRequest ur = userRequestQueue.poll();
-            DatacenterMetrics.get().addUserRequest(ur);
+
+            dcMetrics.addUserRequest(ur);
             List<Task> userRequestTasks = ur.getTasks();
             allTasks.addAll(userRequestTasks);
             taskQueue.addAll(ur.getInitialReadyTasks());
@@ -115,7 +117,7 @@ public class UserRequestScheduler extends SimEntity {
 
     private void printQueues() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n=======SCHEDULER QUEUES=======").append(TextUtil.NEW_LINE);
+        sb.append(NEW_LINE).append("=======SCHEDULER QUEUES=======").append(NEW_LINE);
         sb.append("All tasks list: ").append(allTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
         sb.append("Waiting tasks queue: ").append(waitingTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
         sb.append("Finished tasks list: ").append(finishedTasks.stream().map(t -> String.valueOf(t.getId())).collect(Collectors.joining(", "))).append(NEW_LINE);
@@ -159,7 +161,7 @@ public class UserRequestScheduler extends SimEntity {
 
     public void printTasksReport() {
         StringBuilder sb = new StringBuilder();
-        sb.append(PrintUtils.NEW_LINE);
+        sb.append(NEW_LINE);
         sb.append("============================================================= OUTPUT ======================================================================================").append(NEW_LINE);
         sb.append(String.format("%20s %20s %20s %20s %20s %20s %20s ", "Cloudlet ID", "STATUS", "Data center ID", "ContainerId", "Time", "Start Time", "Finish Time")).append(NEW_LINE);
 
@@ -174,7 +176,7 @@ public class UserRequestScheduler extends SimEntity {
                     task.getContainer().getId(),
                     dft.format(task.getCloudlet().getActualCPUTime()),
                     dft.format(task.getCloudlet().getExecStartTime()),
-                    dft.format(task.getCloudlet().getFinishTime()))).append(PrintUtils.NEW_LINE);
+                    dft.format(task.getCloudlet().getFinishTime()))).append(NEW_LINE);
 
 
         }

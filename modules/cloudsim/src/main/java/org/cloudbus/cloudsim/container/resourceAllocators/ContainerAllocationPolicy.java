@@ -120,7 +120,6 @@ public abstract class ContainerAllocationPolicy {
 			return (List<T>) this.containerHostList;
 		}
 
-		public abstract int getFreePesForHost(int hostId);
 }
 
 

@@ -95,15 +95,3 @@ class Pack {
 }
 
 
-enum Rank {
-    ALPHA, BETA, DELTA, OMEGA
-
-    static Rank getRank(int rank) {
-        switch (rank) {
-            case 1: return ALPHA
-            case 2: return BETA
-            case 3: return DELTA
-            default: return OMEGA
-        }
-    }
-}

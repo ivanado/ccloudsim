@@ -5,6 +5,19 @@ import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.core.ContainerHost
 import org.cloudbus.cloudsim.container.utils.IDs
 
+enum Rank {
+    ALPHA, BETA, DELTA, OMEGA
+
+    static Rank getRank(int rank) {
+        switch (rank) {
+            case 1: return ALPHA
+            case 2: return BETA
+            case 3: return DELTA
+            default: return OMEGA
+        }
+    }
+}
+
 class GreyWolf {
     int id
 
@@ -26,7 +39,6 @@ class GreyWolf {
         this.objectives = ObjectiveFunction.calculate(taskToSchedule, currentHostCandidate)
         this.fitnessValue = this.objectives.values().sum() as Double
     }
-
 
 
     @Override

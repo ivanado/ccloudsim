@@ -24,8 +24,9 @@ public class HostFaultInjector extends SimEntity {
     @Setter
     private ContainerDatacenter datacenter;
     private final Map<ContainerHost, List<Double>> hostFailureTimes;
-    private DatacenterMetrics dcResources = DatacenterMetrics.get();
-    private RandomDataGenerator  randomData;
+    private final DatacenterMetrics dcResources = DatacenterMetrics.get();
+    private final RandomDataGenerator randomData;
+
     public HostFaultInjector(final ContainerDatacenter datacenter) {
         super(datacenter.getName() + "-ContainerHostFaultInjector");
         this.setDatacenter(datacenter);
@@ -50,10 +51,7 @@ public class HostFaultInjector extends SimEntity {
     }
 
     private double getNextFaultDelay() {
-
-   long x =   randomData.nextPoisson(0.0003);
-   return x;
-//        return Math.random() * 3600;
+        return randomData.nextPoisson(1000);
     }
 
     @Override
@@ -138,9 +136,9 @@ public class HostFaultInjector extends SimEntity {
 
     public static void main(String[] args) {
         RandomDataGenerator randomData = new RandomDataGenerator();
-        for(int i =0; i <300;i++){
-            long x =   randomData.nextPoisson(200);
-            System.out.println("->"+x);
+        for (int i = 0; i < 300; i++) {
+            long x = randomData.nextPoisson(200);
+            System.out.println("->" + x);
         }
 
     }

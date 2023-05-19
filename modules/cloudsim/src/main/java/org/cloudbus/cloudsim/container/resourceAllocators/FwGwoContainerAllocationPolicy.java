@@ -95,9 +95,4 @@ public class FwGwoContainerAllocationPolicy extends ContainerAllocationPolicy {
     public ContainerHost getContainerHost(int containerId, int userId) {
         return containerHostTable.get(Container.getUid(userId, containerId));
     }
-
-    @Override
-    public int getFreePesForHost(int hostId) {
-        return 0;//hostFreePes.get(hostId);
-    }
 }

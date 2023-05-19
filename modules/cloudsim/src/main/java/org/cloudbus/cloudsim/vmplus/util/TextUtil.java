@@ -45,6 +45,7 @@ public class TextUtil {
     private static final String STANDARD_GET_REGEX = "get.+";
     private static final String BOOLGET_REGEX = "is.+";
     private static final Map<Class<?>, List<Method>> GET_METHODS = new HashMap<>();
+    public static final String COMMA =", ";
 
     /**
      * Converts the specified class to a single line of text. Convenient for
@@ -311,7 +312,7 @@ public class TextUtil {
     /**
      * Converts the specified object to a single line of text by concatenating
      * its properties and "Virtual Properties". Essentially this methods calls
-     * {@link TextUtil.getTxtLine(final Object obj, final String delimeter,
+     * {@link getTxtLine(final Object obj, final String delimeter,
      * final String[] properties, final boolean includeFieldNames)} to
      * textualise the properties and then appends the virtual properties.
      * 
@@ -371,7 +372,7 @@ public class TextUtil {
     /**
      * Converts the specified object to a single line of text by concatenating
      * its properties and "Virtual Properties". Essentially this methods calls
-     * {@link TextUtil.getTxtLine(final Object obj, final String delimeter,
+     * {@link getTxtLine(final Object obj, final String delimeter,
      * final String[] properties, final boolean includeFieldNames)} to
      * textualise the properties and then appends the virtual properties.
      * 
@@ -713,7 +714,7 @@ public class TextUtil {
         } else {
             Class<?> clazz = Primitives.wrap(obj.getClass());
             if (clazz.equals(Double.class) || clazz.equals(Float.class)) {
-                result = String.format("%" + SIZE_OF_DBL_STRINGS + "s", TextUtil.DEC_FORMAT.format(obj));
+                result = String.format("%" + SIZE_OF_DBL_STRINGS + "s", DEC_FORMAT.format(obj));
             } else if (clazz.equals(Boolean.class)) {
                 result = String.valueOf(obj);
             } else if (Number.class.isAssignableFrom(clazz)) {

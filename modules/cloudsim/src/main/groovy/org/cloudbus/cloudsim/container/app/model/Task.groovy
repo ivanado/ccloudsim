@@ -12,8 +12,7 @@ class Task {
     Microservice microservice
     ContainerCloudlet cloudlet
     Container container
-//    Task provider
-//    Task consumer
+
     List<Task> consumers = []
     List<Task> providers = []
     UserRequest userRequest
@@ -32,7 +31,6 @@ class Task {
         providers.add(provider)
     }
 
-
     void setConsumer(Task consumer) {
         consumers.add(consumer)
     }
@@ -46,9 +44,4 @@ class Task {
     String toString() {
         return "Task-$id [container #$container.id, cloudlet #$cloudlet.cloudletId]"
     }
-//
-//    void set(Task provider, Task consumer) {
-//        this.providers.add(provider)
-//        this.consumers.add(consumer)
-//    }
 }

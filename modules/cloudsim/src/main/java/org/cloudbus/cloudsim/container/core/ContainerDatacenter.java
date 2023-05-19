@@ -276,9 +276,8 @@ public class ContainerDatacenter extends SimEntity {
             List<String> containers = containerHost.getContainerList().stream().map(container -> String.valueOf(container.getId())).toList();
             List<String> ms = containerHost.getContainerList().stream().map(c -> String.valueOf(c.getMicroserviceId())).toList();
             String msg = "Host #" + containerHost.getId() +
-                    "\t AllPes=" + containerHost.getNumberOfPes() +
+                    " AllPes=" + containerHost.getNumberOfPes() +
                     " Host-FreePes=" + containerHost.getNumberOfFreePes() +
-                    " Scheduler-FreePes=" + containerAllocationPolicy.getFreePesForHost(containerHost.getId()) +
                     " Containers=" + containers +
                     " Microservices= " +ms;
             Log.printLine(msg);

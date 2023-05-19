@@ -1,8 +1,11 @@
 package org.cloudbus.cloudsim.container.app.model.algo
 
-import org.cloudbus.cloudsim.container.app.PrintUtils
+
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.utils.IDs
+
+import static org.cloudbus.cloudsim.vmplus.util.TextUtil.COMMA
+import static org.cloudbus.cloudsim.vmplus.util.TextUtil.NEW_LINE
 
 class Gwo {
 
@@ -40,12 +43,12 @@ class Gwo {
     String getIterationLogMessage(int iteration) {
         StringBuilder sb = new StringBuilder()
         GreyWolf currentBest = packs.collect { it.getWolfByRank(Rank.ALPHA) }.min { it.fitnessValue }
-        sb.append(iteration).append(PrintUtils.COMMA)
-        sb.append(currentBest.objectives["thresholdDistance"]).append(PrintUtils.COMMA)
-        sb.append(currentBest.objectives["clusterBalance"]).append(PrintUtils.COMMA)
-        sb.append(currentBest.objectives["systemFailureRate"]).append(PrintUtils.COMMA)
-        sb.append(currentBest.objectives["totalNetworkDistance"]).append(PrintUtils.COMMA)
-        sb.append(currentBest.objectives.values().sum()).append(PrintUtils.NEW_LINE)
+        sb.append(iteration).append(COMMA)
+        sb.append(currentBest.objectives["thresholdDistance"]).append(COMMA)
+        sb.append(currentBest.objectives["clusterBalance"]).append(COMMA)
+        sb.append(currentBest.objectives["systemFailureRate"]).append(COMMA)
+        sb.append(currentBest.objectives["totalNetworkDistance"]).append(COMMA)
+        sb.append(currentBest.objectives.values().sum()).append(NEW_LINE)
     }
 
     GreyWolf getBestWolfFromALlPacks() {

@@ -8,6 +8,7 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ContainerDatacenterBroker extends SimEntity {
@@ -16,7 +17,6 @@ public class ContainerDatacenterBroker extends SimEntity {
     private int taskSchedulerId;
     public Integer datacenterId;
     public ContainerDatacenterCharacteristics datacenterCharacteristics;
-
 
 
     private final DatacenterMetrics dcMetrics = DatacenterMetrics.get();
@@ -85,10 +85,11 @@ public class ContainerDatacenterBroker extends SimEntity {
     private void processCloudletReturn(SimEvent ev) {
 
         ContainerCloudlet cloudlet = (ContainerCloudlet) ev.getData();
-
+        List<String> finishedCloudlets = dcMetrics.getFinishedTasks().stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.toList());
+                finishedCloudlets.add(String.valueOf(cloudlet.getCloudletId()));
 
         Log.printLine(getName(), ": Cloudlet #", cloudlet.getCloudletId(),
-                " returned. finished Cloudlets = ", dcMetrics.getFinishedTasks().stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.joining(", ")), ", ", cloudlet.getCloudletId());
+                " returned. finished Cloudlets = ", String.join(", ", finishedCloudlets) );
         Task task = dcMetrics.getTask(cloudlet);
         //deallocate the container used for cloudlet processing
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task.getContainer());
@@ -97,7 +98,7 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
         if (dcMetrics.allTasksProcessed()) {
-            Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": All Cloudlets executed. Finishing...");
+            Log.printLine(getName(), ": All Cloudlets executed. Finishing...");
             clearDatacenters();
             finishExecution();
         } else { // some cloudlets haven't finished yet
@@ -143,6 +144,6 @@ public class ContainerDatacenterBroker extends SimEntity {
 
 
     public void bind(int taskSchedulerId) {
-        this.taskSchedulerId=taskSchedulerId;
+        this.taskSchedulerId = taskSchedulerId;
     }
 }
