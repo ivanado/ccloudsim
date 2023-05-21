@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.container.app.model.algo
+package org.cloudbus.cloudsim.container.app.algo.model
 
 import org.cloudbus.cloudsim.Log
 import org.cloudbus.cloudsim.container.app.model.Task
@@ -32,15 +32,17 @@ class Pack {
         this.r2 = Math.random()
 
         createWolvesWithInitialPositionAndRank()
-        Log.printLine("Pack #", id, " created with ", noOfWolves, " wolves")
+//        Log.printLine("Pack #", id, " created with ", noOfWolves, " wolves")
     }
 
     void createWolvesWithInitialPositionAndRank() {
-        for (int i = 0; i < noOfWolves; i++) {
+        for (int i = 0; i < firework.bestSparks.size(); i++) {
             Spark s = this.firework.bestSparks.get(i)
-            GreyWolf gw = new GreyWolf(currentPosition: s.position, currentHostCandidate: hostsToSearch.get(s.position), rank: Rank.getRank(i + 1), fitnessValue: s.fitnessValue)
+            GreyWolf gw = new GreyWolf(currentPosition: s.position, currentHostCandidate: hostsToSearch.get(s.position), rank: Rank.OMEGA, fitnessValue: s.fitnessValue)
             this.wolves.add(gw)
         }
+        this.wolves.sort { it.fitnessValue }
+                .eachWithIndex { GreyWolf gw, int i -> gw.setRank(Rank.getRank(i + 1)) };
     }
 
     void updatePositions(double a) {
@@ -52,11 +54,17 @@ class Pack {
             int newPosition = calculateNewPosition(C, currentWolf, E)
 
             int oldPosition = currentWolf.currentPosition
-            int normalizedNewPosition = Math.abs(newPosition % (hostsToSearch.size() - 1))
+            if (newPosition != oldPosition) {
+                def hostMaxIndex = hostsToSearch.size() - 1
+                int normalizedNewPosition = hostMaxIndex != null
+                        ? Math.abs(newPosition % hostMaxIndex)
+                        : 0
 
-            currentWolf.currentPosition = normalizedNewPosition
-            currentWolf.currentHostCandidate = hostsToSearch.get(currentWolf.currentPosition)
+                currentWolf.currentPosition = normalizedNewPosition
+                currentWolf.currentHostCandidate = hostsToSearch.get(currentWolf.currentPosition)
 //            Log.printLine("Pack#$id ", "\tupdatePosition for gw#$currentWolf.id from $oldPosition to $currentWolf.currentPosition", "\t (hostCandidate = $currentWolf.currentHostCandidate)")
+
+            }
 
         }
 //        Log.print(NEW_LINE)
@@ -65,12 +73,22 @@ class Pack {
 
     private int calculateNewPosition(double C, GreyWolf currentWolf, double E) {
         double distanceAlpha = C * getWolfByRank(Rank.ALPHA).currentPosition - currentWolf.currentPosition
-        double distanceBeta = C * getWolfByRank(Rank.BETA).currentPosition - currentWolf.currentPosition
-        double distanceDelta = C * getWolfByRank(Rank.DELTA).currentPosition - currentWolf.currentPosition
         double X1 = getWolfByRank(Rank.ALPHA).currentPosition - E * distanceAlpha
-        double X2 = getWolfByRank(Rank.BETA).currentPosition - E * distanceBeta
-        double X3 = getWolfByRank(Rank.DELTA).currentPosition - E * distanceDelta
-        int newPosition = (int) (X1 + X2 + X3) / 3
+        int newPosition = getWolfByRank(Rank.ALPHA).currentPosition
+        if (this.noOfWolves < 2) {
+            double distanceBeta = C * getWolfByRank(Rank.BETA).currentPosition - currentWolf.currentPosition
+            double X2 = getWolfByRank(Rank.BETA).currentPosition - E * distanceBeta
+
+            if (this.noOfWolves < 3) {
+                double distanceDelta = C * getWolfByRank(Rank.DELTA).currentPosition - currentWolf.currentPosition
+                double X3 = getWolfByRank(Rank.DELTA).currentPosition - E * distanceDelta
+
+                newPosition = (int) (X1 + X2 + X3) / 3
+
+            } else {
+                newPosition = (int) (X1 + X2) / 2
+            }
+        }
         newPosition
     }
 

@@ -13,22 +13,25 @@ class Simulation {
 
         CloudSim.init(1, Calendar.getInstance(), false)
 
-        List<ContainerHost> hosts = CloudFactory.createHosts(10)
+        List<ContainerHost> hosts = CloudFactory.createHosts(200)
 
         ContainerDatacenter datacenter = CloudFactory.createDatacenter("BM-DC", hosts)
         ContainerDatacenterBroker broker = new ContainerDatacenterBroker("BM-Broker")
 
-        List<UserRequest> userRequests = [new UserRequest(broker.getId()), new UserRequest(broker.getId()), new UserRequest(broker.getId())]
+        List<UserRequest> userRequests = []
+        200.times {
+           userRequests << new UserRequest(broker.getId())
+        }
 
         UserRequestScheduler taskScheduler = new UserRequestScheduler("BM-TaskScheduler", broker.getId(), userRequests)
-        broker.bind(taskScheduler.getId())
+        broker.bind(taskScheduler)
 //        ContainerHostFaultInjector hostFaultInjector = new ContainerHostFaultInjector(datacenter);
 //        ContainerFaultInjector containerFaultInjector = new ContainerFaultInjector(datacenter);
 
         CloudSim.startSimulation()
 
         taskScheduler.printTasksReport()
-
+broker.printSystemMetrics()
 
         CloudSim.stopSimulation()
         Log.printLine("finished!")

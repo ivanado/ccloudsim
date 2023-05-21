@@ -1,5 +1,7 @@
-package org.cloudbus.cloudsim.container.app.model.algo
+package org.cloudbus.cloudsim.container.app.algo
 
+import org.cloudbus.cloudsim.container.app.algo.model.Firework
+import org.cloudbus.cloudsim.container.app.algo.model.Spark
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.core.ContainerHost
 
@@ -10,7 +12,7 @@ class Fwa {
     double maxAmplitude = 0
     int numberOfFireworks = 0
     List<ContainerHost> allHosts = []
-    int maxPerFwSparkCount = 0
+    int maxSparkCountPerFw = 0
     Map<Firework, List<Spark>> bestSparksPerFirework = [:]
 
     void initFireworks() {
@@ -24,19 +26,24 @@ class Fwa {
                     : (i + 1) * hostsPerFirework
 
             List<ContainerHost> hosts = allHosts.subList(i * hostsPerFirework, toIdx)
-            fireworks.add(new Firework(hosts, maxPerFwSparkCount))
+            if(!hosts.isEmpty()){
+                fireworks.add(new Firework(hosts, maxSparkCountPerFw))
+
+            }
         }
     }
 
     void calculateAmplitudes(Task taskToSchedule) {
         for (Firework firework : fireworks) {
-            firework.calculateFitnessValues(taskToSchedule)
-            double maximumExplosionAmplitude = firework.upperBound
+            if(!firework.hostsToSearch.isEmpty()) {
+                firework.calculateFitnessValues(taskToSchedule)
+                double maximumExplosionAmplitude = firework.upperBound
 
-            double amplitude = maximumExplosionAmplitude * (firework.fwFitnessValue - bestFitness + Double.MIN_VALUE) / (fireworks.collect{f -> f.fwFitnessValue - bestFitness}.sum() + Double.MIN_VALUE)
-            maxAmplitude = maxAmplitude < amplitude ? amplitude : maxAmplitude
-            double normalizedAmplitude = 2 * amplitude / maxAmplitude
-            firework.setAmplitude(amplitude, normalizedAmplitude)
+                double amplitude = maximumExplosionAmplitude * (firework.fwFitnessValue - bestFitness + Double.MIN_VALUE) / (fireworks.collect { f -> f.fwFitnessValue - bestFitness }.sum() + Double.MIN_VALUE)
+                maxAmplitude = maxAmplitude < amplitude ? amplitude : maxAmplitude
+                double normalizedAmplitude = 2 * amplitude / maxAmplitude
+                firework.setAmplitude(amplitude, normalizedAmplitude)
+            }
         }
 
     }

@@ -47,6 +47,7 @@ public class ContainerDatacenter extends SimEntity {
     @Override
     public void processEvent(SimEvent ev) {
         int srcId;
+//        Log.printLine(getName(), ": Processing event id#", ev.getTag() );
         switch (ev.getTag()) {
             // Resource characteristics inquiry
             case CloudSimTags.RESOURCE_CHARACTERISTICS -> {
@@ -126,8 +127,8 @@ public class ContainerDatacenter extends SimEntity {
     private void processContainerSubmit(SimEvent ev) {
 
         Task task = (Task) ev.getData();
-
-        boolean result = containerAllocationPolicy.allocateHostForContainer(task.getContainer(), dcResources.getRunningHosts());
+List<ContainerHost> ch = dcResources.getRunningHostsWithFreePes(task.getContainer().getNumberOfPes());
+        boolean result = containerAllocationPolicy.allocateHostForContainer(task.getContainer(), ch);
 
         int[] data = new int[3];
         data[1] = task.getContainer().getId();
@@ -146,7 +147,7 @@ public class ContainerDatacenter extends SimEntity {
             task.getContainer().updateContainerProcessing(CloudSim.clock(), containerAllocationPolicy.getContainerHost(task.getContainer()).getContainerScheduler().getAllocatedMipsForContainer(task.getContainer()));
         } else {
             data[0] = -1;
-            Log.printLine(String.format("Couldn't find a host for the container #%s", task.getContainer().getUid()));
+            Log.printLine(String.format("Couldn't find a host with required resources for the container #%s", task.getContainer().getId()));
 
         }
         send(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), ContainerCloudSimTags.CONTAINER_CREATE_ACK, data);

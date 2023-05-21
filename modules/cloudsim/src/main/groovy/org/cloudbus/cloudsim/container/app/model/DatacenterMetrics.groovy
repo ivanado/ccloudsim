@@ -1,5 +1,6 @@
 package org.cloudbus.cloudsim.container.app.model
 
+import org.apache.commons.math3.random.RandomDataGenerator
 import org.cloudbus.cloudsim.container.core.Container
 import org.cloudbus.cloudsim.container.core.ContainerCloudlet
 import org.cloudbus.cloudsim.container.core.ContainerHost
@@ -25,7 +26,8 @@ class DatacenterMetrics {
     Map<ContainerHost, List<Double>> hostFailureTimes
     Map<Integer, List<Double>> microserviceContainerFailureTimes
 
-    Map<UserRequest, List<Task>> allTasksByUserRequest
+    Map<UserRequest, List<Task>> tasksPerUserRequest
+    Map<UserRequest, List<Task>> finishedTasksPerUserRequest
     List<Task> runningTasks
     List<Task> finishedTasks
     List<Task> failedTasks
@@ -33,7 +35,7 @@ class DatacenterMetrics {
     List<ContainerCloudlet> runningCloudlets
     List<ContainerCloudlet> finishedCloudlets
     List<ContainerCloudlet> failedCloudlets
-    Map bestObjectiveFunctionValues
+    List<Map> objectiveFunctionValues = []
 
     private DatacenterMetrics() {
         this.runningHosts = new ArrayList<>()
@@ -44,7 +46,8 @@ class DatacenterMetrics {
         this.microserviceRunningContainers = new HashMap<>()
         this.microserviceFinishedContainers = new HashMap<>()
         this.microserviceFailedContainers = new HashMap<>()
-        this.allTasksByUserRequest = new HashMap<>()
+        this.tasksPerUserRequest = new HashMap<>()
+        this.finishedTasksPerUserRequest = new HashMap<>()
         this.hostFailureTimes = new HashMap<>()
         this.userRequestsByType = new HashMap<>()
         this.runningTasks = new ArrayList<>()
@@ -55,7 +58,7 @@ class DatacenterMetrics {
         this.failedCloudlets = new ArrayList<>()
     }
 
-    List<ContainerHost> getHostsWithFreePes(int requiredPes) {
+    List<ContainerHost> getRunningHostsWithFreePes(int requiredPes) {
         return this.runningHosts.findAll { h -> h.getNumberOfFreePes() >= requiredPes }
     }
 
@@ -132,7 +135,11 @@ class DatacenterMetrics {
     }
 
     static void main(String[] args) {
+        final RandomDataGenerator randomDataGenerator = new RandomDataGenerator();
+100.times {
+    println( randomDataGenerator.nextPoisson(100))
 
+}
 
     }
 
@@ -179,15 +186,18 @@ class DatacenterMetrics {
     }
 
     def startTask(Task task) {
-        List<Task> tasks = this.allTasksByUserRequest[task.userRequest.id] ?: []
+        List<Task> tasks = this.tasksPerUserRequest[task.userRequest] ?: []
         tasks.add(task)
-        this.allTasksByUserRequest[task.userRequest.id] = tasks
+        this.tasksPerUserRequest[task.userRequest] = tasks
         this.runningTasks.add(task)
     }
 
     def finishTask(Task task) {
         this.runningTasks.remove(task)
         this.finishedTasks.add(task)
+        List<Task> finished = this.finishedTasksPerUserRequest[task.userRequest] ?: []
+        finished.add(task)
+        this.finishedTasksPerUserRequest[task.userRequest] = finished
     }
 
     def failTask(Task task) {
@@ -197,33 +207,112 @@ class DatacenterMetrics {
 
     boolean hasTasksToProcess() {
 
-        return allTasksByUserRequest.values().flatten().size() > finishedTasks.size()
+        return tasksPerUserRequest.values().flatten().size() > finishedTasksPerUserRequest.values().flatten().size()
 
     }
 
-    boolean allTasksProcessed() {
-        return allTasksByUserRequest.values().flatten().size() == finishedTasks.size()
+    boolean allUserRequestTasksProcessed() {
+        List tasks = tasksPerUserRequest.values().flatten()
+        List finished = finishedTasksPerUserRequest.values().flatten()
+        return tasks.every { finished.contains(it) }
     }
 
     Task getTask(ContainerCloudlet cloudlet) {
-        return allTasksByUserRequest.values().flatten().find { Task t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId() } as Task
+        return tasksPerUserRequest.values().flatten().find { Task t -> t.cloudlet.getCloudletId() == cloudlet.getCloudletId() } as Task
     }
 
     Task getTask(Container container) {
-        return allTasksByUserRequest.values().flatten().find { Task t -> t.container.getId() == container.getId() } as Task
+        return tasksPerUserRequest.values().flatten().find { Task t -> t.container.getId() == container.getId() } as Task
     }
 
     Task getTask(int containerId) {
-        return allTasksByUserRequest.values().flatten().find { Task t -> t.container.getId() == containerId } as Task
+        return tasksPerUserRequest.values().flatten().find { Task t -> t.container.getId() == containerId } as Task
     }
 
-    void setBestObjectiveFunctionValues(Map map) {
-        this.bestObjectiveFunctionValues = map
+    void addObjectiveFunctionValueForTask(Map map, Task task) {
+        this.objectiveFunctionValues.add(map)
     }
 
     Set<Microservice> getRunningMicroservices(Microservice msToSchedule) {
         Set<Microservice> allMicroservices = new HashSet<>(runningMicroservices)
         allMicroservices << msToSchedule
         return allMicroservices
+    }
+
+    boolean hasRunningHostsWithResourcesAvailable(int pes) {
+        return !getRunningHostsWithFreePes(pes).isEmpty()
+    }
+
+    boolean areUserRequestTasksProcessed(UserRequest userRequest) {
+        List tasks = tasksPerUserRequest[userRequest]
+        List finished = finishedTasksPerUserRequest[userRequest]
+        return tasks.size() == finished.size() && tasks.collect { it.getId() }.every { finished.collect { it.id }.contains(it) }
+    }
+
+    List<Task> getFinishedUserRequestTasks(UserRequest userRequest) {
+        return finishedTasksPerUserRequest[userRequest]
+    }
+
+    void printMetrics() {
+
+        println("===================OBJECTIVES PER TASK===============================")
+        println("thresholdDistance,clusterBalance,systemFailureRate,totalNetworkDistance,objectiveFunction")
+        objectiveFunctionValues.each { println("${it.thresholdDistance},${it.clusterBalance},${it.systemFailureRate},${it.totalNetworkDistance},${it.values().sum()}") }
+        File outputLog = new File("modules/cloudsim/build/ObjectivesPerTask.log")
+        if (outputLog.exists()) outputLog.delete()
+        outputLog << "thresholdDistance clusterBalance systemFailureRate totalNetworkDistance objectiveFunction\n"
+        objectiveFunctionValues.each { outputLog << ("${it.thresholdDistance} ${it.clusterBalance} ${it.systemFailureRate} ${it.totalNetworkDistance} ${it.values().sum()}\n") }
+
+        Map best = [:]
+        Map worst = [:]
+        Map of = objectiveFunctionValues[0]
+        best = of
+        worst = of
+        def bestObjective = worst.values().sum()
+        def worstObjective = worst.values().sum()
+        def sumObjective = 0;
+        Map sums = [thresholdDistance: 0, clusterBalance: 0, systemFailureRate: 0, totalNetworkDistance: 0]
+        objectiveFunctionValues.each { it ->
+            sums.thresholdDistance = sums.thresholdDistance + it.thresholdDistance
+            sums.clusterBalance = sums.clusterBalance + it.clusterBalance
+            sums.systemFailureRate = sums.systemFailureRate + it.systemFailureRate
+            sums.totalNetworkDistance = sums.totalNetworkDistance + it.totalNetworkDistance
+//            if (it.thresholdDistance > worst.thresholdDistance) {
+//                worst.thresholdDistance = it.thresholdDistance
+//            } else {
+//                best.thresholdDistance = it.thresholdDistance
+//            }
+//            if (it.clusterBalance > worst.clusterBalance) {
+//                worst.clusterBalance = it.clusterBalance
+//            } else {
+//                best.clusterBalance = it.clusterBalance
+//            }
+//            if (it.systemFailureRate > worst.systemFailureRate) {
+//                worst.systemFailureRate = it.systemFailureRate
+//            } else {
+//                best.systemFailureRate = it.systemFailureRate
+//            }
+//            if (it.totalNetworkDistance > worst.totalNetworkDistance) {
+//                worst.totalNetworkDistance = it.totalNetworkDistance
+//            } else {
+//                best.totalNetworkDistance = it.totalNetworkDistance
+//            }
+            def obj = it.values().sum()
+            if (obj > worstObjective) {
+                worstObjective = obj
+                worst = it
+            } else {
+                bestObjective = obj
+                best=it
+            }
+            sumObjective += obj
+        }
+        File l = new File("modules/cloudsim/build/stats.log")
+        if (l.exists()) l.delete()
+        //log stats
+        def c = userRequestsByType.values().collect { it.size()}.sum()
+        l << "${c} BEST ${best.thresholdDistance} ${best.clusterBalance} ${best.systemFailureRate} ${best.totalNetworkDistance} ${bestObjective}\n"
+        l << "${c} WORST ${worst.thresholdDistance} ${worst.clusterBalance} ${worst.systemFailureRate} ${worst.totalNetworkDistance} ${worstObjective}\n"
+        l << "${c} MEAN ${sums.thresholdDistance / objectiveFunctionValues.size()} ${worst.clusterBalance / objectiveFunctionValues.size()} ${worst.systemFailureRate / objectiveFunctionValues.size()} ${worst.totalNetworkDistance / objectiveFunctionValues.size()} ${sumObjective / objectiveFunctionValues.size()}\n"
     }
 }

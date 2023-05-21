@@ -59,7 +59,7 @@ public class ContainerFaultInjector extends SimEntity {
 
     private void failRandomContainerAndScheduleNext() {
         Container containerToFail = dcResources.getRandomContainerToFail();
-        sendNow(datacenter.getId(), CloudSimTags.CLOUDLET_CANCEL, containerToFail);
+        sendNow(datacenter.getId(), ContainerCloudSimTags.CLOUDLET_FAIL, containerToFail);
         dcResources.getMicroserviceContainerFailureTimes().computeIfAbsent(containerToFail.getMicroserviceId(), c -> new ArrayList<>()).add(CloudSim.clock());
     }
 

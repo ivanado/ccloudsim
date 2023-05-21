@@ -10,6 +10,7 @@ class Microservice {
     int id
     int requiredPes
 
+
 //    Microservice consumer
 
 //    Microservice provider

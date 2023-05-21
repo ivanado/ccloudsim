@@ -23,7 +23,7 @@ public class BMContainerCloudExample {
         ContainerDatacenter datacenter = CloudFactory.createDatacenter("BM-DC", hosts);
         ContainerDatacenterBroker broker = new ContainerDatacenterBroker("BM-Broker");
         UserRequestScheduler taskScheduler = new UserRequestScheduler("BM-TaskScheduler", broker.getId(), new ArrayList<>());
-        broker.bind(taskScheduler.getId());
+        broker.bind(taskScheduler);
 //        ContainerHostFaultInjector hostFaultInjector = new ContainerHostFaultInjector(datacenter);
 //        ContainerFaultInjector containerFaultInjector = new ContainerFaultInjector(datacenter);
         CloudSim.startSimulation();

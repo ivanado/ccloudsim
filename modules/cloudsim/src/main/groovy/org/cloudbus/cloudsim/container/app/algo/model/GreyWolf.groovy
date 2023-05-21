@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.container.app.model.algo
+package org.cloudbus.cloudsim.container.app.algo.model
 
 import org.cloudbus.cloudsim.container.app.model.ObjectiveFunction
 import org.cloudbus.cloudsim.container.app.model.Task

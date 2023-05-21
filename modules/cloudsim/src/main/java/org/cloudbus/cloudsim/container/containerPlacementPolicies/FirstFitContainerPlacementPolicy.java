@@ -1,19 +1,24 @@
 package org.cloudbus.cloudsim.container.containerPlacementPolicies;
 
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
+import org.cloudbus.cloudsim.container.app.model.ObjectiveFunction;
 import org.cloudbus.cloudsim.container.app.model.Task;
-import org.cloudbus.cloudsim.container.app.algo.FwGwo;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
 
 import java.util.List;
 
-public class FwGwoContainerPlacementPolicy extends ContainerPlacementPolicy{
+public class FirstFitContainerPlacementPolicy extends ContainerPlacementPolicy {
 
     public ContainerHost getContainerHost(List<ContainerHost> hosts, Task task) {
-        ContainerHost selectedHost = new FwGwo(5, hosts).selectHostForContainerAllocation(task);
+        if( hosts.isEmpty()){
+            return null;
+        }
+        ContainerHost selectedHost =hosts.get(0);
         Log.printLine(getClass().getSimpleName(), ": Selected host #", selectedHost, " for running task ", task.toString());
+        DatacenterMetrics.get().addObjectiveFunctionValueForTask(ObjectiveFunction.calculate(task, selectedHost), task);
+
         return selectedHost;
     }
-
-
 }
+

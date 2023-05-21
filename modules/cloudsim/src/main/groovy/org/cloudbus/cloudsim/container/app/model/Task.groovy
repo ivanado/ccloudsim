@@ -42,6 +42,6 @@ class Task {
 
     @Override
     String toString() {
-        return "Task-$id [container #$container.id, cloudlet #$cloudlet.cloudletId]"
+        return "Task-$id [ms #${microservice.getName()} container #$container.id]"
     }
 }

@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.container.app.model.algo
+package org.cloudbus.cloudsim.container.app.algo.model
 
 import org.apache.commons.math3.random.JDKRandomGenerator
 import org.apache.commons.math3.random.UniformRandomGenerator
@@ -45,7 +45,7 @@ class Firework {
 
     void calculateFitnessValues(Task taskToSchedule) {
         ContainerHost allocationCandidateHost = hostsToSearch.get(position)
-        double fitness = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum()  as Double
+        double fitness = ObjectiveFunction.calculate(taskToSchedule, allocationCandidateHost).values().sum() as Double
         this.fwFitnessValue = fitness
         calculateSparkFitness(taskToSchedule)
     }
@@ -57,17 +57,21 @@ class Firework {
 
     void generateSparks() {
         List<Integer> positions = []
+        def hostMaxIndex = hostsToSearch.size() - 1  //hosts with resurces available for cl,oudlet processing
         List<Spark> sparks = new ArrayList()//spark is denoted only by oisition which isindex in hostlist
-        for (int i = 0; i < numberOfSparks; i++) {
+        for (int i = 0; (hostMaxIndex < numberOfSparks && i < hostMaxIndex) || (hostMaxIndex >= numberOfSparks && i < numberOfSparks); i++) {
             UniformRandomGenerator generator = new UniformRandomGenerator(new JDKRandomGenerator())
             int randomizedAmpl = (int) Math.round(generator.nextNormalizedDouble() * amplitude)
-            int sparkPosition = Math.abs(position + randomizedAmpl) % (hostsToSearch.size() - 1)
-            while (positions.contains(sparkPosition)) {
-                randomizedAmpl = (int) Math.round(generator.nextNormalizedDouble() * amplitude)
-                sparkPosition = Math.abs(sparkPosition + randomizedAmpl) % (hostsToSearch.size() - 1)
-            }
-            positions.add(sparkPosition)
-            exploredPositions.add(sparkPosition)
+
+            int sparkPosition =
+                    hostMaxIndex > 0
+                            ? Math.abs(position + randomizedAmpl) % hostMaxIndex
+                            : 0
+
+//            while (positions.contains(sparkPosition)) {
+//                randomizedAmpl = (int) Math.round(generator.nextNormalizedDouble() * amplitude)
+//                sparkPosition = Math.abs(sparkPosition + randomizedAmpl) % (hostsToSearch.size() - 1)
+//            }
             sparks.add(new Spark(sparkPosition, this))
         }
         this.sparks = sparks

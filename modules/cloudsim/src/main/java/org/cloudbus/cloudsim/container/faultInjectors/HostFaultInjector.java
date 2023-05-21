@@ -24,7 +24,7 @@ public class HostFaultInjector extends SimEntity {
     @Setter
     private ContainerDatacenter datacenter;
     private final Map<ContainerHost, List<Double>> hostFailureTimes;
-    private final DatacenterMetrics dcResources = DatacenterMetrics.get();
+    private final DatacenterMetrics dcMetrics = DatacenterMetrics.get();
     private final RandomDataGenerator randomData;
 
     public HostFaultInjector(final ContainerDatacenter datacenter) {
@@ -73,7 +73,7 @@ public class HostFaultInjector extends SimEntity {
 
 
         } finally {
-            if (dcResources.hasRunningHosts()) {
+            if (dcMetrics.hasRunningHosts()) {
                 scheduleHostFault();
             }
         }
@@ -109,10 +109,10 @@ public class HostFaultInjector extends SimEntity {
                         CloudSim.clock(), msg));
         failHostContainers(host);
         host.setFailed(true);
-        dcResources.getHostFailureTimes().computeIfAbsent(host, h -> new ArrayList<>()).add(CloudSim.clock());
+        dcMetrics.getHostFailureTimes().computeIfAbsent(host, h -> new ArrayList<>()).add(CloudSim.clock());
 
-        dcResources.getRunningHosts().remove(host);
-        dcResources.getFailedHosts().add(host);
+        dcMetrics.getRunningHosts().remove(host);
+        dcMetrics.getFailedHosts().add(host);
     }
 
 

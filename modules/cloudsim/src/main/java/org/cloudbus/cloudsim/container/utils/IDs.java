@@ -2,10 +2,10 @@ package org.cloudbus.cloudsim.container.utils;
 
 import org.cloudbus.cloudsim.container.app.model.Task;
 import org.cloudbus.cloudsim.container.app.model.UserRequest;
-import org.cloudbus.cloudsim.container.app.model.algo.Firework;
-import org.cloudbus.cloudsim.container.app.model.algo.Pack;
-import org.cloudbus.cloudsim.container.app.model.algo.Spark;
-import org.cloudbus.cloudsim.container.app.model.algo.GreyWolf;
+import org.cloudbus.cloudsim.container.app.algo.model.Firework;
+import org.cloudbus.cloudsim.container.app.algo.model.Pack;
+import org.cloudbus.cloudsim.container.app.algo.model.Spark;
+import org.cloudbus.cloudsim.container.app.algo.model.GreyWolf;
 import org.cloudbus.cloudsim.container.containerProvisioners.ContainerPe;
 import org.cloudbus.cloudsim.container.core.*;
 import org.cloudbus.cloudsim.container.core.ContainerDatacenterBroker;

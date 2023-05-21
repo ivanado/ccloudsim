@@ -1,6 +1,9 @@
-package org.cloudbus.cloudsim.container.app.model.algo
+package org.cloudbus.cloudsim.container.app.algo
 
-
+import org.cloudbus.cloudsim.container.app.algo.model.Firework
+import org.cloudbus.cloudsim.container.app.algo.model.GreyWolf
+import org.cloudbus.cloudsim.container.app.algo.model.Pack
+import org.cloudbus.cloudsim.container.app.algo.model.Rank
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.utils.IDs
 
@@ -15,7 +18,7 @@ class Gwo {
 
     def initPacks(List<Firework> fireworks) {
         IDs.resetGwo()
-        for (int i = 0; i < numberOfPacks; i++) {
+        for (int i = 0; i < numberOfPacks && i < fireworks.size(); i++) {
             this.packs.add(new Pack(wolvesPerPack, fireworks.get(i)))
         }
     }
@@ -43,12 +46,17 @@ class Gwo {
     String getIterationLogMessage(int iteration) {
         StringBuilder sb = new StringBuilder()
         GreyWolf currentBest = packs.collect { it.getWolfByRank(Rank.ALPHA) }.min { it.fitnessValue }
-        sb.append(iteration).append(COMMA)
-        sb.append(currentBest.objectives["thresholdDistance"]).append(COMMA)
-        sb.append(currentBest.objectives["clusterBalance"]).append(COMMA)
-        sb.append(currentBest.objectives["systemFailureRate"]).append(COMMA)
-        sb.append(currentBest.objectives["totalNetworkDistance"]).append(COMMA)
-        sb.append(currentBest.objectives.values().sum()).append(NEW_LINE)
+        if(currentBest != null){
+            sb.append(iteration).append(COMMA)
+            sb.append(currentBest.objectives["thresholdDistance"]).append(COMMA)
+            sb.append(currentBest.objectives["clusterBalance"]).append(COMMA)
+            sb.append(currentBest.objectives["systemFailureRate"]).append(COMMA)
+            sb.append(currentBest.objectives["totalNetworkDistance"]).append(COMMA)
+            sb.append(currentBest.objectives.values().sum()).append(NEW_LINE)
+        }
+
+        return sb.toString()
+
     }
 
     GreyWolf getBestWolfFromALlPacks() {

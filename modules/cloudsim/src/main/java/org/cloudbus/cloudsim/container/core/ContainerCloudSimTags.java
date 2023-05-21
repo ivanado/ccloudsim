@@ -1,6 +1,7 @@
 package org.cloudbus.cloudsim.container.core;
 
 public class ContainerCloudSimTags {
+
     /**
      * Starting constant value for network-related tags
      **/
@@ -82,7 +83,7 @@ public class ContainerCloudSimTags {
     public static final int CONTAINER_FAIL_DESTROY = ContainerSimBASE + 17;
 
     public static final int CLOUDLET_FAIL = ContainerSimBASE + 18;
-
+    public static final int TASK_WAIT =  ContainerSimBASE + 19;
     private ContainerCloudSimTags() {
         // TODO Auto-generated constructor stub
         throw new UnsupportedOperationException("ContainerCloudSim Tags cannot be instantiated");

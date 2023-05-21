@@ -31,7 +31,7 @@ class UserRequest {
     }
 
     List<Task> getInitialReadyTasks(){
-        this.tasks.findAll {it.providers.isEmpty()}
+        this.tasks.findAll {it.providers.isEmpty() }
     }
     List<Task> getInitialWaitingTasks(){
         this.tasks.findAll {!it.providers.isEmpty()}
@@ -39,5 +39,10 @@ class UserRequest {
 
     int getMicroserviceCont(){
         return this.type.msCallGraph.size()
+    }
+
+    @Override
+    String toString() {
+        return "UserRequest-$id"
     }
 }

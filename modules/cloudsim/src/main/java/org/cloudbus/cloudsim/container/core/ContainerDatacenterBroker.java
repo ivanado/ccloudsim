@@ -3,6 +3,7 @@ package org.cloudbus.cloudsim.container.core;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics;
 import org.cloudbus.cloudsim.container.app.model.Task;
+import org.cloudbus.cloudsim.container.schedulers.UserRequestScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 public class ContainerDatacenterBroker extends SimEntity {
 
 
-    private int taskSchedulerId;
+    private UserRequestScheduler taskScheduler;
     public Integer datacenterId;
     public ContainerDatacenterCharacteristics datacenterCharacteristics;
 
@@ -63,13 +64,18 @@ public class ContainerDatacenterBroker extends SimEntity {
                 }
 
             }
+        } else if (data[2] == CloudSimTags.FALSE) {
+            Log.printLine(getName(), ": Container allocation failed for containerId #", containerId, " and hostId #", hostId);
+            //allocation failed for task. return task to waiting queue untill resources are freed
+            Task processCloudletTask = dcMetrics.getTask(containerId);
+            sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_WAIT, processCloudletTask);
+            //return task with container to queue
         }
     }
 
     private void processTaskSubmit(SimEvent ev) {
         Task task = (Task) ev.getData();
         dcMetrics.startTask(task);
-
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_SUBMIT, task);
     }
 
@@ -86,18 +92,18 @@ public class ContainerDatacenterBroker extends SimEntity {
 
         ContainerCloudlet cloudlet = (ContainerCloudlet) ev.getData();
         List<String> finishedCloudlets = dcMetrics.getFinishedTasks().stream().map(t -> String.valueOf(t.getCloudlet().getCloudletId())).collect(Collectors.toList());
-                finishedCloudlets.add(String.valueOf(cloudlet.getCloudletId()));
+        finishedCloudlets.add(String.valueOf(cloudlet.getCloudletId()));
 
         Log.printLine(getName(), ": Cloudlet #", cloudlet.getCloudletId(),
-                " returned. finished Cloudlets = ", String.join(", ", finishedCloudlets) );
+                " returned. finished Cloudlets = ", String.join(", ", finishedCloudlets));
         Task task = dcMetrics.getTask(cloudlet);
         //deallocate the container used for cloudlet processing
         sendNow(datacenterId, ContainerCloudSimTags.CONTAINER_DESTROY, task.getContainer());
-        sendNow(taskSchedulerId, ContainerCloudSimTags.TASK_RETURN, task);
+        sendNow(taskScheduler.getId(), ContainerCloudSimTags.TASK_RETURN, task);
         dcMetrics.finishTask(task);
 
 
-        if (dcMetrics.allTasksProcessed()) {
+        if (dcMetrics.allUserRequestTasksProcessed() && taskScheduler.hasMoreTasks()) {
             Log.printLine(getName(), ": All Cloudlets executed. Finishing...");
             clearDatacenters();
             finishExecution();
@@ -143,7 +149,11 @@ public class ContainerDatacenterBroker extends SimEntity {
     }
 
 
-    public void bind(int taskSchedulerId) {
-        this.taskSchedulerId = taskSchedulerId;
+    public void bind(UserRequestScheduler taskScheduler) {
+        this.taskScheduler = taskScheduler;
+    }
+
+    public void printSystemMetrics() {
+        dcMetrics.printMetrics();
     }
 }
