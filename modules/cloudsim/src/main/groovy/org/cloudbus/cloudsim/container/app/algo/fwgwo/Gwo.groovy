@@ -1,9 +1,9 @@
-package org.cloudbus.cloudsim.container.app.algo
+package org.cloudbus.cloudsim.container.app.algo.fwgwo
 
-import org.cloudbus.cloudsim.container.app.algo.model.Firework
-import org.cloudbus.cloudsim.container.app.algo.model.GreyWolf
-import org.cloudbus.cloudsim.container.app.algo.model.Pack
-import org.cloudbus.cloudsim.container.app.algo.model.Rank
+import org.cloudbus.cloudsim.container.app.algo.fwgwo.model.Firework
+import org.cloudbus.cloudsim.container.app.algo.fwgwo.model.GreyWolf
+import org.cloudbus.cloudsim.container.app.algo.fwgwo.model.Pack
+import org.cloudbus.cloudsim.container.app.algo.fwgwo.model.Rank
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.utils.IDs
 

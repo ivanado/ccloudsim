@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.container.app.algo.model
+package org.cloudbus.cloudsim.container.app.algo.fwgwo.model
 
 class FwSpark extends Spark{
 

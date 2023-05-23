@@ -26,7 +26,7 @@ public class ContainerHostAllocationPolicy extends ContainerAllocationPolicy {
         this.freePes = new ArrayList<>();
         this.containerUsedPes = new HashMap<>();
         this.containerHostTable = new HashMap<>();
-        this.placementPolicy = new FirstFitContainerPlacementPolicy();
+        this.placementPolicy = new FwGwoContainerPlacementPolicy();
 
     }
 

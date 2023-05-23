@@ -1,11 +1,10 @@
-package org.cloudbus.cloudsim.container.app.algo
+package org.cloudbus.cloudsim.container.app.algo.fwgwo
 
-import groovy.util.logging.Log
-import org.cloudbus.cloudsim.container.app.algo.model.GreyWolf
+
+import org.cloudbus.cloudsim.container.app.algo.fwgwo.model.GreyWolf
 import org.cloudbus.cloudsim.container.app.model.DatacenterMetrics
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.core.ContainerHost
-import org.cloudbus.cloudsim.util.MathUtil
 
 class FwGwo {
     static class Config {

@@ -2,7 +2,7 @@ package org.cloudbus.cloudsim.container.containerPlacementPolicies;
 
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.container.app.model.Task;
-import org.cloudbus.cloudsim.container.app.algo.FwGwo;
+import org.cloudbus.cloudsim.container.app.algo.fwgwo.FwGwo;
 import org.cloudbus.cloudsim.container.core.ContainerHost;
 
 import java.util.List;

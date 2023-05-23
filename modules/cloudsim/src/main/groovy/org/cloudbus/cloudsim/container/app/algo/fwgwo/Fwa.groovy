@@ -1,7 +1,7 @@
-package org.cloudbus.cloudsim.container.app.algo
+package org.cloudbus.cloudsim.container.app.algo.fwgwo
 
-import org.cloudbus.cloudsim.container.app.algo.model.Firework
-import org.cloudbus.cloudsim.container.app.algo.model.Spark
+
+import org.cloudbus.cloudsim.container.app.algo.fwgwo.model.Firework
 import org.cloudbus.cloudsim.container.app.model.Task
 import org.cloudbus.cloudsim.container.core.ContainerHost
 
@@ -13,7 +13,7 @@ class Fwa {
     int numberOfFireworks = 0
     List<ContainerHost> allHosts = []
     int maxSparkCountPerFw = 0
-    Map<Firework, List<Spark>> bestSparksPerFirework = [:]
+    Map<Firework, List<org.cloudbus.cloudsim.container.app.algo.fwgwo.model.Spark>> bestSparksPerFirework = [:]
 
     void initFireworks() {
         this.maxAmplitude = 0
